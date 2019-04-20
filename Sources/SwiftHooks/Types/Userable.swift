@@ -1,6 +1,5 @@
-public protocol Userable: Hashable {
-    associatedtype ID: Hashable
-    var id: ID { get }
+public protocol Userable {
+    var id: IDable { get }
     
     var mention: String { get }
 }
