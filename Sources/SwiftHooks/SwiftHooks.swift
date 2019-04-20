@@ -1,3 +1,5 @@
+import Logging
+
 public final class SwiftHooks {
     public var hooks: [Hook]
     
@@ -10,24 +12,14 @@ public final class SwiftHooks {
 
     public func hook(_ hook: Hook) throws {
         self.hooks.append(hook)
-        try hook.connect()
+        try hook.boot()
     }
+}
+
+extension SwiftHooks {
+    public static let logger = Logger(label: "SwiftHooks.Global")
     
-    public func listen<T, I>(for event: T, _ handler: @escaping (I) -> ()) where T: MType, T.ContentType == I {
-        if let event = event as? GlobalMType<I, GlobalEvent> {
-            self.gListen(for: event, handler)
-        }
-    }
-    
-    func gListen<I>(for event: GlobalMType<I, GlobalEvent>, _ handler: @escaping EventHandler<I>) {
-        var closures = self.globalListeners[event, default: []]
-        closures.append { (event, data) in
-            guard let object = event.getData(I.self, from: data) else {
-                // TODO: Log
-                return
-            }
-            try handler(object)
-        }
-        self.globalListeners[event] = closures
+    public var logger: Logger {
+        return type(of: self).logger
     }
 }

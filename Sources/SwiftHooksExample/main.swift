@@ -1,4 +1,7 @@
-import SwiftHooks
+import SwiftHooksDiscord
+import Logging
+
+//LoggingSystem.bootstrap()
 
 let swiftHooks = SwiftHooks()
 

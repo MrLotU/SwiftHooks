@@ -5,14 +5,30 @@ public final class DiscordHook: Hook {
         }
         
         self.token = options.token
+        self.discordListeners = [:]
     }
     
-    public func connect() throws { print("Connecting \(self.self)") }
-    public func shutDown() throws { print("Shutting down \(self.self)") }
+    public func boot() throws { SwiftHooks.logger.info("Connecting \(self.self)") }
+    public func shutDown() throws { SwiftHooks.logger.info("Shutting down \(self.self)") }
     
     var token: String
     
+    public internal(set) var discordListeners: [DiscordEvent: [EventClosure]]
+    
     public weak var hooks: SwiftHooks?
+    
+    public func listen<T, I>(for event: T, _ handler: @escaping EventHandler<I>) where T : MType, I == T.ContentType {
+        guard let event = event as? DiscordMType<I, DiscordEvent> else { return }
+        var closures = self.discordListeners[event, default: []]
+        closures.append { (event, data) in
+            guard let object = event.getData(I.self, from: data) else {
+                SwiftHooks.logger.debug("Unable to extract \(I.self) from data.")
+                return
+            }
+            try handler(object)
+        }
+        self.discordListeners[event] = closures
+    }
 }
 
 public struct DiscordHookOptions: HookOptions {
@@ -38,6 +54,6 @@ public struct Guild {
 
 public enum DiscordEvent: EventType {
     case _guildCreate
-    
+
     public static let guildCreate = DiscordMType(DiscordEvent._guildCreate, Guild.self)
 }

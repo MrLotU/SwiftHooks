@@ -2,5 +2,7 @@ public protocol Messageable {
     var channel: Channelable { get }
     var content: String { get }
     
-    func reply(_ msg: Messageable)
+    func reply(_ content: String)
+    func edit(_ content: String)
+    func delete()
 }
