@@ -1,3 +1,5 @@
+import Foundation
+
 public final class DiscordHook: Hook {
     public init<O>(_ options: O, hooks: SwiftHooks?) where DiscordHook == O.H, O : HookOptions {
         guard let options = options as? DiscordHookOptions else {
@@ -5,6 +7,7 @@ public final class DiscordHook: Hook {
         }
         
         self.token = options.token
+        self.hooks = hooks
         self.discordListeners = [:]
     }
     
@@ -29,6 +32,22 @@ public final class DiscordHook: Hook {
         }
         self.discordListeners[event] = closures
     }
+    
+    public func dispatchEvent<E>(_ event: E, with payload: Payload, raw: Data) where E : EventType {
+        let globals = {
+            self.hooks?.dispatchEvent(event, with: payload, raw: raw)
+        }
+        guard let event = event as? DiscordEvent else { globals(); return }
+        let handlers = self.discordListeners[event]
+        handlers?.forEach({ (handler) in
+            do {
+                try handler(payload, raw)
+            } catch {
+                SwiftHooks.logger.error("\(error.localizedDescription)")
+            }
+        })
+        globals()
+    }
 }
 
 public struct DiscordHookOptions: HookOptions {
@@ -50,6 +69,10 @@ public struct DiscordMType<ContentType, E: EventType>: MType {
 
 public struct Guild {
     public let name: String
+    
+    public init(_ name: String) {
+        self.name = name
+    }
 }
 
 public enum DiscordEvent: EventType {

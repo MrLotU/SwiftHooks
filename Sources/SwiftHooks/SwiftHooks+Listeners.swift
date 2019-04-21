@@ -8,8 +8,8 @@ extension SwiftHooks {
     
     func gListen<I>(for event: GlobalMType<I, GlobalEvent>, _ handler: @escaping EventHandler<I>) {
         var closures = self.globalListeners[event, default: []]
-        closures.append { (event, data) in
-            guard let object = event.getData(I.self, from: data) else {
+        closures.append { (payload, data) in
+            guard let object = payload.getData(I.self, from: data) else {
                 self.logger.debug("Unable to extract \(I.self) from data.")
                 return
             }

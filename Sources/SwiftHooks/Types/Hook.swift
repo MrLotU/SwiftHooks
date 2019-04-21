@@ -1,3 +1,5 @@
+import Foundation
+
 public protocol Hook {
     func boot() throws
     func shutDown() throws
@@ -7,6 +9,7 @@ public protocol Hook {
     init<O>(_ options: O, hooks: SwiftHooks?) where O: HookOptions, O.H == Self
     
     func listen<T, I>(for event: T, _ handler: @escaping EventHandler<I>) where T: MType, T.ContentType == I
+    func dispatchEvent<E>(_ event: E, with payload: Payload, raw: Data) where E: EventType
 }
 
 public protocol HookOptions {
