@@ -9,11 +9,15 @@ let swiftHooks = SwiftHooks()
 try swiftHooks.hook(DiscordHook.self, DiscordHookOptions(token: ""))
 
 swiftHooks.listen(for: GlobalEvent.messageCreate) { message in
-    print(message.content)
+    print("Message listener: " + message.content)
 }
 
 swiftHooks.listen(for: DiscordEvent.guildCreate) { (guild) in
     print(guild.name)
+}
+
+try swiftHooks.command("test") { (hooks, event, command) in
+    print("Triggering test command!")
 }
 
 print(swiftHooks.globalListeners)
@@ -32,15 +36,7 @@ struct MessagePayload: Payload {
         var mention: String = ""
     }
     struct U: Userable {
-        struct StringID: IDable {
-            func asInt() -> Int? {
-                return nil
-            }
-            func asString() -> String? {
-                return "123"
-            }
-        }
-        var id: IDable = StringID()
+        var id: IDable = "123"
         
         var mention: String = ""
     }
@@ -56,16 +52,16 @@ struct MessagePayload: Payload {
         func delete() { }
     }
     func getData<T>(_ type: T.Type, from: Data) -> T? {
-        return M(channel: C(), content: "Some cool content! Woah!", author: U()) as! T
+        return M(channel: C(), content: "!test", author: U()) as! T
     }
 }
 
 let discordHook = swiftHooks.hooks.compactMap {
     $0 as? DiscordHook
-    }.first!
+}.first!
 
 let event = DiscordEvent._guildCreate
 let mEvent = GlobalEvent._messageCreate
 
-discordHook.dispatchEvent(event, with: TempPayload(), raw: Data())
+//discordHook.dispatchEvent(event, with: TempPayload(), raw: Data())
 discordHook.dispatchEvent(mEvent, with: MessagePayload(), raw: Data())
