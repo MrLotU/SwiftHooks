@@ -25,6 +25,5 @@ extension SwiftHooks {
         if event == ._messageCreate, let m = payload.getData(Messageable.self, from: raw) {
             self.handleMessage(m)
         }
-
     }
 }

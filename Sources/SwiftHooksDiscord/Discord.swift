@@ -1,5 +1,11 @@
 import Foundation
 
+extension HookID {
+    static var discord: HookID {
+        return .init(identifier: "discord")
+    }
+}
+
 public final class DiscordHook: Hook {
     public init<O>(_ options: O, hooks: SwiftHooks?) where DiscordHook == O.H, O : HookOptions {
         guard let options = options as? DiscordHookOptions else {
@@ -13,14 +19,15 @@ public final class DiscordHook: Hook {
     
     public func boot() throws { SwiftHooks.logger.info("Connecting \(self.self)") }
     public func shutDown() throws { SwiftHooks.logger.info("Shutting down \(self.self)") }
-    
+    public static let id: HookID = .discord
+
     var token: String
     
     public internal(set) var discordListeners: [DiscordEvent: [EventClosure]]
     
     public weak var hooks: SwiftHooks?
     
-    public func listen<T, I>(for event: T, _ handler: @escaping EventHandler<I>) where T : MType, I == T.ContentType {
+    public func listen<T, I>(for event: T, handler: @escaping EventHandler<I>) where T : MType, I == T.ContentType {
         guard let event = event as? DiscordMType<I, DiscordEvent> else { return }
         var closures = self.discordListeners[event, default: []]
         closures.append { (event, data) in
@@ -33,11 +40,11 @@ public final class DiscordHook: Hook {
         self.discordListeners[event] = closures
     }
     
-    public func dispatchEvent<E>(_ event: E, with payload: Payload, raw: Data) where E : EventType {
-        let globals = {
+    public func dispatchEvent<E>(_ event: E, with payload: Payload, raw: Data) where E: EventType {
+        defer {
             self.hooks?.dispatchEvent(event, with: payload, raw: raw)
         }
-        guard let event = event as? DiscordEvent else { globals(); return }
+        guard let event = event as? DiscordEvent else { return }
         let handlers = self.discordListeners[event]
         handlers?.forEach({ (handler) in
             do {
@@ -46,7 +53,6 @@ public final class DiscordHook: Hook {
                 SwiftHooks.logger.error("\(error.localizedDescription)")
             }
         })
-        globals()
     }
 }
 
@@ -72,6 +78,12 @@ public struct Guild {
     
     public init(_ name: String) {
         self.name = name
+    }
+}
+
+extension Event {
+    public static var guildCreate: DiscordMType<Guild, DiscordEvent> {
+        return DiscordEvent.guildCreate
     }
 }
 

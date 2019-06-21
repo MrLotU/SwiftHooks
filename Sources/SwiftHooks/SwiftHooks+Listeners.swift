@@ -3,7 +3,7 @@ extension SwiftHooks {
         if let event = event as? GlobalMType<I, GlobalEvent> {
             self.gListen(for: event, handler)
         }
-        self.hooks.forEach { $0.listen(for: event, handler) }
+        self.hooks.forEach { $0.listen(for: event, handler: handler) }
     }
     
     func gListen<I>(for event: GlobalMType<I, GlobalEvent>, _ handler: @escaping EventHandler<I>) {

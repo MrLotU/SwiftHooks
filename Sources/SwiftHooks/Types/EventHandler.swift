@@ -17,6 +17,12 @@ extension MType {
     }
 }
 
+public enum Event {
+    public static var messageCreate: GlobalMType<Messageable, GlobalEvent> {
+        return GlobalEvent.messageCreate
+    }
+}
+
 public struct GlobalMType<ContentType, E: EventType>: MType {
     public let event: E
 
@@ -24,6 +30,7 @@ public struct GlobalMType<ContentType, E: EventType>: MType {
         self.event = e
     }
 }
+
 public enum GlobalEvent: EventType {
     case _messageCreate
     
