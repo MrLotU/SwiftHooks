@@ -21,6 +21,13 @@ try swiftHooks.command("test") { (hooks, event, command) in
 print(swiftHooks.globalListeners)
 print(swiftHooks.hooks)
 
+class MyPlugin: Plugin {
+    @CCommand("ping")
+    var closure: CommandClosure = { (hooks: SwiftHooks, event: CommandEvent, command: Command) in
+        
+    }
+}
+
 struct TempPayload: Payload {
     func getData<T>(_ type: T.Type, from: Data) -> T? {
         return Guild("Guild") as? T

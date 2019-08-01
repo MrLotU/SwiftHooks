@@ -5,7 +5,7 @@ public final class SwiftHooks {
     
     public internal(set) var globalListeners: [GlobalEvent: [EventClosure]]
     public internal(set) var commands: [Command]
-    public internal(set) var plugins: [BasePlugin]
+    public internal(set) var plugins: [Plugin]
     
     public init() {
         self.hooks = []
