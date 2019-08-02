@@ -22,6 +22,9 @@ print(swiftHooks.globalListeners)
 print(swiftHooks.hooks)
 
 class MyPlugin: Plugin {
+    
+    init() { }
+    
     @CCommand("ping")
     var closure: CommandClosure = { (hooks: SwiftHooks, event: CommandEvent, command: Command) in
         
@@ -61,12 +64,14 @@ struct MessagePayload: Payload {
     }
 }
 
-let discordHook = swiftHooks.hooks.compactMap {
-    $0 as? DiscordHook
-}.first!
+//swiftHooks.re
 
-let event = DiscordEvent._guildCreate
-let mEvent = GlobalEvent._messageCreate
-
-discordHook.dispatchEvent(event, with: TempPayload(), raw: Data())
-discordHook.dispatchEvent(mEvent, with: MessagePayload(), raw: Data())
+//let discordHook = swiftHooks.hooks.compactMap {
+//    $0 as? DiscordHook
+//}.first!
+//
+//let event = DiscordEvent._guildCreate
+//let mEvent = GlobalEvent._messageCreate
+//
+//discordHook.dispatchEvent(event, with: TempPayload(), raw: Data())
+//discordHook.dispatchEvent(mEvent, with: MessagePayload(), raw: Data())
