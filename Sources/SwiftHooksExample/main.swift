@@ -23,13 +23,19 @@ print(swiftHooks.hooks)
 
 class MyPlugin: Plugin {
     
-    init() { }
-    
-    @CCommand("ping")
-    var closure: CommandClosure = { (hooks: SwiftHooks, event: CommandEvent, command: Command) in
-        
+    init() {
+        self.closure = { (hooks: SwiftHooks, event: CommandEvent, command: Command) in
+            print("Ping succeed!")
+       }
     }
+        
+    @CCommand("ping")
+    var closure
 }
+
+try swiftHooks.register(MyPlugin())
+
+print(swiftHooks.commands)
 
 struct TempPayload: Payload {
     func getData<T>(_ type: T.Type, from: Data) -> T? {
@@ -60,18 +66,16 @@ struct MessagePayload: Payload {
         func delete() { }
     }
     func getData<T>(_ type: T.Type, from: Data) -> T? {
-        return M(channel: C(), content: "!test", author: U()) as? T
+        return M(channel: C(), content: "!ping", author: U()) as? T
     }
 }
 
-//swiftHooks.re
+let discordHook = swiftHooks.hooks.compactMap {
+    $0 as? DiscordHook
+}.first!
 
-//let discordHook = swiftHooks.hooks.compactMap {
-//    $0 as? DiscordHook
-//}.first!
-//
-//let event = DiscordEvent._guildCreate
-//let mEvent = GlobalEvent._messageCreate
-//
-//discordHook.dispatchEvent(event, with: TempPayload(), raw: Data())
-//discordHook.dispatchEvent(mEvent, with: MessagePayload(), raw: Data())
+let event = DiscordEvent._guildCreate
+let mEvent = GlobalEvent._messageCreate
+
+discordHook.dispatchEvent(event, with: TempPayload(), raw: Data())
+discordHook.dispatchEvent(mEvent, with: MessagePayload(), raw: Data())
