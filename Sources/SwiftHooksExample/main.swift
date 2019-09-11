@@ -10,7 +10,7 @@ swiftHooks.listen(for: Event.messageCreate) { message in
 }
 
 swiftHooks.listen(for: Event.guildCreate) { (guild) in
-    print(guild.name)
+    print("Guild thing \(guild.name)")
 }
 
 try swiftHooks.command("test") { (hooks, event, command) in
@@ -24,18 +24,26 @@ print(swiftHooks.hooks)
 class MyPlugin: Plugin {
     
     init() {
-        self.closure = { (hooks: SwiftHooks, event: CommandEvent, command: Command) in
-            print("Ping succeed!")
-       }
+//        self.closure
+    
+        self.guildListener = { guild in
+            print("Other guild thing \(guild.name)")
+        }
     }
         
     @CCommand("ping")
-    var closure
+    var closure = { (hooks: SwiftHooks, event: CommandEvent, command: Command) in
+         print("Ping succeed!")
+    }
+    
+    @Listener(Event.guildCreate)
+    var guildListener
 }
 
-try swiftHooks.register(MyPlugin())
+swiftHooks.register(MyPlugin())
 
 print(swiftHooks.commands)
+print(swiftHooks.globalListeners)
 
 struct TempPayload: Payload {
     func getData<T>(_ type: T.Type, from: Data) -> T? {
@@ -74,8 +82,10 @@ let discordHook = swiftHooks.hooks.compactMap {
     $0 as? DiscordHook
 }.first!
 
+print(discordHook.discordListeners)
+
 let event = DiscordEvent._guildCreate
-let mEvent = GlobalEvent._messageCreate
+let mEvent = DiscordEvent._messageCreate
 
 discordHook.dispatchEvent(event, with: TempPayload(), raw: Data())
 discordHook.dispatchEvent(mEvent, with: MessagePayload(), raw: Data())

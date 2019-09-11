@@ -21,7 +21,7 @@ public struct Command {
 
 extension Command: CustomStringConvertible {
     public var description: String {
-        return [self.group, self.trigger, self.arguments.map(String.init).joined(separator: " ")].compactMap { $0 }.joined(separator: " ")
+        return [self.group, self.trigger, self.arguments.compactMap(String.init).joined(separator: " ")].compactMap { $0 }.joined(separator: " ").trimmingCharacters(in: .whitespaces)
     }
     
     var fullTrigger: String {

@@ -81,6 +81,32 @@ public struct Guild {
     }
 }
 
+public struct DiscordChannel: Channelable {
+    public func send(_ msg: String) { }
+    
+    public var mention: String { return "" }
+}
+
+public struct DiscordUser: Userable {
+    public var id: IDable { return "" }
+    
+    public var mention: String { return "" }
+}
+
+public struct DiscordMessage: Messageable {
+    public var channel: Channelable
+    
+    public var content: String
+    
+    public var author: Userable
+    
+    public func reply(_ content: String) { }
+    
+    public func edit(_ content: String) { }
+    
+    public func delete() { }
+}
+
 extension Event {
     public static var guildCreate: DiscordMType<Guild, DiscordEvent> {
         return DiscordEvent.guildCreate
@@ -89,6 +115,8 @@ extension Event {
 
 public enum DiscordEvent: EventType {
     case _guildCreate
+    case _messageCreate
 
     public static let guildCreate = DiscordMType(DiscordEvent._guildCreate, Guild.self)
+    public static let messageCreate = DiscordMType(DiscordEvent._messageCreate, DiscordMessage.self)
 }
