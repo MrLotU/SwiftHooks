@@ -113,8 +113,8 @@ extension Event {
     }
 }
 
-public enum DiscordEvent: EventType {
-    case _guildCreate
+public enum DiscordEvent: String, EventType {
+    case _guildCreate = "GUILD_CREATE"
     case _messageCreate
 
     public static let guildCreate = DiscordMType(DiscordEvent._guildCreate, Guild.self)

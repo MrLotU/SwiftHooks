@@ -23,21 +23,15 @@ print(swiftHooks.hooks)
 
 class MyPlugin: Plugin {
     
-    init() {
-//        self.closure
-    
-        self.guildListener = { guild in
-            print("Other guild thing \(guild.name)")
-        }
-    }
-        
     @CCommand("ping")
-    var closure = { (hooks: SwiftHooks, event: CommandEvent, command: Command) in
+    var closure = { (hooks, event, command) in
          print("Ping succeed!")
     }
     
-    @Listener(Event.guildCreate)
-    var guildListener
+    @Listener(DiscordEvent.guildCreate)
+    var guildListener = { guild in
+        print("Other guild thing \(guild.name)")
+    }
 }
 
 swiftHooks.register(MyPlugin())
