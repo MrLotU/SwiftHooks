@@ -1,60 +1,47 @@
 public typealias CommandClosure = (SwiftHooks, CommandEvent, Command) throws -> Void
 
-public struct Command {
-    public let trigger: String
-    public let arguments: [CommandArgument]
-    public let aliases: [String]
-    public let group: String?
-    public let permissionChecks: [CommandPermissionChecker]
-    public let userInfo: [String: Any]
-    public let execute: CommandClosure
+@propertyWrapper
+public final class Command {
+    let name: String
+    let group: String?
+    let arguments: [CommandArgument]
+    let aliases: [String]
+    let permChecks: [CommandPermissionChecker]
+    let userInfo: [String: Any]
+
+    public let wrappedValue: CommandClosure
+    
+    public init() {
+        preconditionFailure("Commands must always have a name.")
+    }
     
     public func invoke(on event: CommandEvent, using hooks: SwiftHooks) throws {
-        for check in permissionChecks {
+        for check in permChecks {
             if !check.check(event.user, canUse: self, on: event) {
                 throw CommandError.InvalidPermissions
             }
         }
-        try execute(hooks, event, self)
-    }
-}
-
-extension Command: CustomStringConvertible {
-    public var description: String {
-        return [self.group, self.trigger, self.arguments.compactMap(String.init).joined(separator: " ")].compactMap { $0 }.joined(separator: " ").trimmingCharacters(in: .whitespaces)
+        try wrappedValue(hooks, event, self)
     }
     
-    var fullTrigger: String {
-        return [self.group, self.trigger].compactMap { $0 }.joined(separator: " ")
-    }
-}
-
-enum CommandError: Error {
-    case InvalidPermissions
-    case ArgumentCanNotConsume
-    case UnableToConvertArgument(String, String)
-    case ArgumentNotFound(String)
-    case CommandRedeclaration
-}
-
-public struct CommandEvent {
-    public let hooks: SwiftHooks
-    public let user: Userable
-    public let args: [String]
-    public let message: Messageable
-    public let name: String
-    
-    public init(hooks: SwiftHooks, cmd: Command, msg: Messageable) {
-        self.hooks = hooks
-        self.user = msg.author
-        self.message = msg
-        var comps = msg.content.split(separator: " ")
-        let hasGroup = cmd.group != nil
-        var name = "\(comps.removeFirst())"
-        if hasGroup {
-            name += " \(comps.removeFirst())"
-        }
+    public init(wrappedValue c: @escaping CommandClosure, _ name: String, _ args: CommandArgument..., group: String? = nil, aliases: [String] = [], permChecks: [CommandPermissionChecker] = [], userInfo: [String: Any] = [:]) {
+        self.wrappedValue = c
         self.name = name
-        self.args = comps.map(String.init)
+        self.arguments = args
+        self.group = group
+        self.aliases = aliases
+        self.permChecks = permChecks
+        self.userInfo = userInfo
+    }
+
+    
+    public init(_ name: String, args: [CommandArgument] = [], group: String? = nil, aliases: [String] = [], permChecks: [CommandPermissionChecker] = [], userInfo: [String: Any] = [:]) {
+        self.name = name
+        self.arguments = args
+        self.group = group
+        self.aliases = aliases
+        self.permChecks = permChecks
+        self.userInfo = userInfo
+        self.wrappedValue = { _, _, _ in }
     }
 }

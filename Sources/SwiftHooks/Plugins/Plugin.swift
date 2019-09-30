@@ -5,8 +5,8 @@ extension Plugin {
         return Mirror(reflecting: self)
             .children
             .compactMap { child in
-                if let value = child.value as? CCommand {
-                    return value.command
+                if let value = child.value as? Command {
+                    return value
                 }
                 return nil
             }

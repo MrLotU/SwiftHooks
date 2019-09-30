@@ -1,45 +1,4 @@
 extension SwiftHooks {
-    public func command(
-        _ trigger: String,
-        _ args: [CommandArgument],
-        aliases: [String] = [],
-        group: String? = nil,
-        permissionChecks: [CommandPermissionChecker] = [],
-        userInfo: [String: Any] = [:],
-        execute: @escaping CommandClosure) throws
-    {
-        // TODO: Make case sensitivity an option
-        let trigger = trigger.lowercased()
-        let aliases = aliases.map { $0.lowercased() }
-        if !self.commands.filter({ comm in
-            if group != comm.group {
-                return false
-            }
-            return comm.trigger == trigger ||
-                comm.aliases.contains(trigger) ||
-                aliases.contains(comm.trigger) ||
-                !aliases.filter {
-                    return comm.aliases.contains($0)
-                }.isEmpty
-        }).isEmpty {
-            throw CommandError.CommandRedeclaration
-        }
-        let command = Command(trigger: trigger, arguments: args, aliases: aliases, group: group, permissionChecks: permissionChecks, userInfo: userInfo, execute: execute)
-        self.commands.append(command)
-    }
-    
-    public func command(
-        _ trigger: String,
-        _ args: CommandArgument...,
-        aliases: [String] = [],
-        group: String? = nil,
-        permissionChecks: [CommandPermissionChecker] = [],
-        userInfo: [String: Any] = [:],
-        execute: @escaping CommandClosure) throws
-    {
-        try self.command(trigger, args, aliases: aliases, group: group, permissionChecks: permissionChecks, userInfo: userInfo, execute: execute)
-    }
-    
     func handleMessage(_ message: Messageable) {
         let foundCommands = self.findCommands(for: message)
         
@@ -65,5 +24,35 @@ extension SwiftHooks {
     
     func findCommands(for message: Messageable) -> [Command] {
         return self.commands.compactMap { return message.content.starts(with: "!" + $0.fullTrigger) ? $0 : nil }
+    }
+}
+
+enum CommandError: Error {
+    case InvalidPermissions
+    case ArgumentCanNotConsume
+    case UnableToConvertArgument(String, String)
+    case ArgumentNotFound(String)
+    case CommandRedeclaration
+}
+
+public struct CommandEvent {
+    public let hooks: SwiftHooks
+    public let user: Userable
+    public let args: [String]
+    public let message: Messageable
+    public let name: String
+    
+    public init(hooks: SwiftHooks, cmd: Command, msg: Messageable) {
+        self.hooks = hooks
+        self.user = msg.author
+        self.message = msg
+        var comps = msg.content.split(separator: " ")
+        let hasGroup = cmd.group != nil
+        var name = "\(comps.removeFirst())"
+        if hasGroup {
+            name += " \(comps.removeFirst())"
+        }
+        self.name = name
+        self.args = comps.map(String.init)
     }
 }

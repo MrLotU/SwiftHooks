@@ -5,27 +5,22 @@ let swiftHooks = SwiftHooks()
 
 try swiftHooks.hook(DiscordHook.self, DiscordHookOptions(token: ""))
 
-swiftHooks.listen(for: Event.messageCreate) { message in
-    print("Message listener: " + message.content)
-}
-
-swiftHooks.listen(for: Event.guildCreate) { (guild) in
-    print("Guild thing \(guild.name)")
-}
-
-try swiftHooks.command("test") { (hooks, event, command) in
-    event.message.reply("Test successful!")
-    print("Triggering test command!")
-}
+//swiftHooks.listen(for: Event.messageCreate) { message in
+//    print("Message listener: " + message.content)
+//}
+//
+//swiftHooks.listen(for: Event.guildCreate) { (guild) in
+//    print("Guild thing \(guild.name)")
+//}
 
 print(swiftHooks.globalListeners)
 print(swiftHooks.hooks)
 
 class MyPlugin: Plugin {
     
-    @CCommand("ping")
+    @Command("ping")
     var closure = { (hooks, event, command) in
-         print("Ping succeed!")
+        print("Ping succeed!")
     }
     
     @Listener(DiscordEvent.guildCreate)
@@ -79,7 +74,7 @@ let discordHook = swiftHooks.hooks.compactMap {
 print(discordHook.discordListeners)
 
 let event = DiscordEvent._guildCreate
-let mEvent = DiscordEvent._messageCreate
+let mEvent = GlobalEvent._messageCreate
 
 discordHook.dispatchEvent(event, with: TempPayload(), raw: Data())
 discordHook.dispatchEvent(mEvent, with: MessagePayload(), raw: Data())

@@ -1,5 +1,5 @@
 extension SwiftHooks {
-    public func listen<T, I>(for event: T, _ handler: @escaping EventHandler<I>) where T: MType, T.ContentType == I {
+    func listen<T, I>(for event: T, _ handler: @escaping EventHandler<I>) where T: MType, T.ContentType == I {
         if let event = event as? GlobalMType<I, GlobalEvent> {
             self.gListen(for: event, handler)
         }
