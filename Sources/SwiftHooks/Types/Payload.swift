@@ -3,12 +3,12 @@ import Foundation
 public typealias EventClosure = (Payload, Data) throws -> Void
 
 public protocol Payload {
+//    associatedtype Body
     func getData<T>(_ type: T.Type, from: Data) -> T?
 }
 
 extension SwiftHooks {
-    public func dispatchEvent<E>(_ event: E, with payload: Payload, raw: Data) where E: EventType {
-        guard let event = event as? GlobalEvent else { return }
+    public func dispatchEvent(_ event: GlobalEvent, with payload: Payload, raw: Data) {
         self.handleInternals(event, with: payload, raw: raw)
         
         let handlers = self.globalListeners[event]

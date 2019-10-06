@@ -3,7 +3,7 @@ protocol IListener {
 }
 
 @propertyWrapper
-public final class Listener<T, I>: IListener where T: MType, T.ContentType == I {
+public final class Listener<T, I>: IListener where T: _Event, T.ContentType == I {
     let event: T
     
     public var wrappedValue: EventHandler<I>

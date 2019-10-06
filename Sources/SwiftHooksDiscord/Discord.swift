@@ -27,7 +27,7 @@ public final class DiscordHook: Hook {
     
     public weak var hooks: SwiftHooks?
     
-    public func listen<T, I>(for event: T, handler: @escaping EventHandler<I>) where T : MType, I == T.ContentType {
+    public func listen<T, I>(for event: T, handler: @escaping EventHandler<I>) where T : _Event, I == T.ContentType {
         guard let event = event as? DiscordMType<I, DiscordEvent> else { return }
         var closures = self.discordListeners[event, default: []]
         closures.append { (event, data) in
@@ -42,7 +42,7 @@ public final class DiscordHook: Hook {
     
     public func dispatchEvent<E>(_ event: E, with payload: Payload, raw: Data) where E: EventType {
         defer {
-            self.hooks?.dispatchEvent(event, with: payload, raw: raw)
+//            self.hooks?.dispatchEvent(event, with: payload, raw: raw)
         }
         guard let event = event as? DiscordEvent else { return }
         let handlers = self.discordListeners[event]
@@ -56,6 +56,16 @@ public final class DiscordHook: Hook {
     }
 }
 
+class DiscordEventTranslator: EventTranslator {
+    func translate<E>(_ event: E) -> GlobalEvent? where E : EventType {
+        guard let e = event as? DiscordEvent else { return nil }
+        switch e {
+        case ._messageCreate: return ._messageCreate
+        default: return nil
+        }
+    }
+}
+
 public struct DiscordHookOptions: HookOptions {
     public typealias H = DiscordHook
     
@@ -66,7 +76,7 @@ public struct DiscordHookOptions: HookOptions {
     }
 }
 
-public struct DiscordMType<ContentType, E: EventType>: MType {
+public struct DiscordMType<ContentType, E: EventType>: _Event {
     public let event: E
     public init(_ e: E, _ t: ContentType.Type) {
         self.event = e

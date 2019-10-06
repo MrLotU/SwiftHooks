@@ -15,8 +15,8 @@ public final class SwiftHooks {
     }
 
     public func hook(_ hook: Hook) throws {
-        self.hooks.append(hook)
         try hook.boot()
+        self.hooks.append(hook)
     }
 }
 
