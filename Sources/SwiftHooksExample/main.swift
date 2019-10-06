@@ -5,14 +5,6 @@ let swiftHooks = SwiftHooks()
 
 try swiftHooks.hook(DiscordHook.self, DiscordHookOptions(token: ""))
 
-//swiftHooks.listen(for: Event.messageCreate) { message in
-//    print("Message listener: " + message.content)
-//}
-//
-//swiftHooks.listen(for: Event.guildCreate) { (guild) in
-//    print("Guild thing \(guild.name)")
-//}
-
 print(swiftHooks.globalListeners)
 print(swiftHooks.hooks)
 
