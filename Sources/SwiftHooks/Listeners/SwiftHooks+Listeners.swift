@@ -17,5 +17,4 @@ extension SwiftHooks {
         }
         self.globalListeners[event] = closures
     }
-
 }

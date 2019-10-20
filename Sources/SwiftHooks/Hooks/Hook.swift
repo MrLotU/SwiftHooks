@@ -13,6 +13,7 @@ public protocol Hook {
     
     var hooks: SwiftHooks? { get set }
     static var id: HookID { get }
+    var translator: EventTranslator.Type { get }
     
     init<O>(_ options: O, hooks: SwiftHooks?) where O: HookOptions, O.H == Self
     
@@ -20,20 +21,20 @@ public protocol Hook {
     func dispatchEvent<E>(_ event: E, with payload: Payload, raw: Data) where E: EventType
 }
 
-//public extension Hook {
-//    func listen<T, I>(for event: T, only: HookID..., handler: @escaping EventHandler<I>) where T: MType, T.ContentType == I {
-//        self.listen(for: event, excluding: [], only: only, handler: handler)
-//    }
-//
-//    func listen<T, I>(for event: T, excluding: HookID..., handler: @escaping EventHandler<I>) where T: MType, T.ContentType == I {
-//        self.listen(for: event, excluding: excluding, only: [], handler: handler)
-//    }
-//
-//    func listen<T, I>(for event: T, excluding: [HookID], only: [HookID], handler: @escaping EventHandler<I>) where T: MType, T.ContentType == I {
-//        guard !excluding.contains(type(of: self).id), (only.isEmpty || only.contains(type(of: self).id)) else { return }
-//        self.listen(for: event, handler: handler)
-//    }
-//}
+public extension Hook {
+    func listen<T, I>(for event: T, only: HookID..., handler: @escaping EventHandler<I>) where T: _Event, T.ContentType == I {
+        self.listen(for: event, excluding: [], only: only, handler: handler)
+    }
+
+    func listen<T, I>(for event: T, excluding: HookID..., handler: @escaping EventHandler<I>) where T: _Event, T.ContentType == I {
+        self.listen(for: event, excluding: excluding, only: [], handler: handler)
+    }
+
+    func listen<T, I>(for event: T, excluding: [HookID], only: [HookID], handler: @escaping EventHandler<I>) where T: _Event, T.ContentType == I {
+        guard !excluding.contains(type(of: self).id), (only.isEmpty || only.contains(type(of: self).id)) else { return }
+        self.listen(for: event, handler: handler)
+    }
+}
 
 public protocol HookOptions {
     associatedtype H: Hook

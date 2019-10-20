@@ -1,4 +1,4 @@
-public protocol Messageable {
+public protocol Messageable: Codable {
     var channel: Channelable { get }
     var content: String { get }
     var author: Userable { get }

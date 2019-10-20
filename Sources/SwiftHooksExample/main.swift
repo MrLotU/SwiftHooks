@@ -39,14 +39,23 @@ struct MessagePayload: Payload {
         var mention: String = ""
     }
     struct U: Userable {
-        var id: IDable = "123"
+        var id: IDable {
+            return _id
+        }
+        let _id: String = "abc"
         
         var mention: String = ""
     }
     struct M: Messageable {
-        var channel: Channelable
+        var channel: Channelable {
+            return c
+        }
+        let c: C
         var content: String
-        var author: Userable
+        var author: Userable {
+            return a
+        }
+        let a: U
         
         func reply(_ content: String) { }
         
@@ -55,7 +64,7 @@ struct MessagePayload: Payload {
         func delete() { }
     }
     func getData<T>(_ type: T.Type, from: Data) -> T? {
-        return M(channel: C(), content: "!ping", author: U()) as? T
+        return M(c: C(), content: "!ping", a: U()) as? T
     }
 }
 

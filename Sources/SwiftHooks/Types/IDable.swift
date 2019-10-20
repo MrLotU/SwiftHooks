@@ -1,4 +1,4 @@
-public protocol IDable {
+public protocol IDable: Codable {
     func asString() -> String?
     func asInt() -> Int?
 }

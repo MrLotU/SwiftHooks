@@ -20,6 +20,9 @@ public final class DiscordHook: Hook {
     public func boot() throws { SwiftHooks.logger.info("Connecting \(self.self)") }
     public func shutDown() throws { SwiftHooks.logger.info("Shutting down \(self.self)") }
     public static let id: HookID = .discord
+    public var translator: EventTranslator.Type {
+        return DiscordEventTranslator.self
+    }
 
     var token: String
     
@@ -57,13 +60,21 @@ public final class DiscordHook: Hook {
 }
 
 class DiscordEventTranslator: EventTranslator {
-    func translate<E>(_ event: E) -> GlobalEvent? where E : EventType {
+    static func translate<E>(_ event: E) -> GlobalEvent? where E : EventType {
         guard let e = event as? DiscordEvent else { return nil }
         switch e {
         case ._messageCreate: return ._messageCreate
         default: return nil
         }
     }
+    
+//    static func decodableTypeForEvent<E, T>(_ event: E) -> T.Type? where E : EventType, T: Decodable {
+//        guard let e = event as? DiscordEvent else { return nil }
+//        switch e {
+//        case ._messageCreate: return DiscordMessage.self
+//        case ._guildCreate: return Guild.self
+//        }
+//    }
 }
 
 public struct DiscordHookOptions: HookOptions {
@@ -83,7 +94,7 @@ public struct DiscordMType<ContentType, E: EventType>: _Event {
     }
 }
 
-public struct Guild {
+public struct Guild: Codable {
     public let name: String
     
     public init(_ name: String) {
@@ -93,27 +104,26 @@ public struct Guild {
 
 public struct DiscordChannel: Channelable {
     public func send(_ msg: String) { }
-    
     public var mention: String { return "" }
 }
 
 public struct DiscordUser: Userable {
     public var id: IDable { return "" }
-    
     public var mention: String { return "" }
 }
 
 public struct DiscordMessage: Messageable {
-    public var channel: Channelable
-    
+    public var channel: Channelable {
+        return _channel
+    }
+    private let _channel: DiscordChannel
     public var content: String
-    
-    public var author: Userable
-    
+    public var author: Userable {
+        return _author
+    }
+    private let _author: DiscordUser
     public func reply(_ content: String) { }
-    
     public func edit(_ content: String) { }
-    
     public func delete() { }
 }
 
