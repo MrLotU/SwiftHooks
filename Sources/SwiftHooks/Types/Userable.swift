@@ -1,5 +1,13 @@
 public protocol Userable: Codable {
-    var id: IDable { get }
+    func asBaseUser() -> BaseUser
+}
+
+public struct BaseUser {
+    var id: IDable
+    var mention: String
     
-    var mention: String { get }
+    public init(id: IDable, mention: String) {
+        self.id = id
+        self.mention = mention
+    }
 }

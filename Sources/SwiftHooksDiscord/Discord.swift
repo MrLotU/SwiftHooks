@@ -31,7 +31,7 @@ public final class DiscordHook: Hook {
     public weak var hooks: SwiftHooks?
     
     public func listen<T, I>(for event: T, handler: @escaping EventHandler<I>) where T : _Event, I == T.ContentType {
-        guard let event = event as? DiscordMType<I, DiscordEvent> else { return }
+        guard let event = event as? _DiscordEvent<DiscordEvent, I> else { return }
         var closures = self.discordListeners[event, default: []]
         closures.append { (event, data) in
             guard let object = event.getData(I.self, from: data) else {
@@ -45,7 +45,7 @@ public final class DiscordHook: Hook {
     
     public func dispatchEvent<E>(_ event: E, with payload: Payload, raw: Data) where E: EventType {
         defer {
-//            self.hooks?.dispatchEvent(event, with: payload, raw: raw)
+            self.hooks?.dispatchEvent(event, with: payload, raw: raw)
         }
         guard let event = event as? DiscordEvent else { return }
         let handlers = self.discordListeners[event]
@@ -87,7 +87,7 @@ public struct DiscordHookOptions: HookOptions {
     }
 }
 
-public struct DiscordMType<ContentType, E: EventType>: _Event {
+public struct _DiscordEvent<E: EventType, ContentType>: _Event {
     public let event: E
     public init(_ e: E, _ t: ContentType.Type) {
         self.event = e
@@ -105,38 +105,39 @@ public struct Guild: Codable {
 public struct DiscordChannel: Channelable {
     public func send(_ msg: String) { }
     public var mention: String { return "" }
+    public func asBaseChannel() -> BaseChannel {
+        return BaseChannel(mention: self.mention)
+    }
 }
 
 public struct DiscordUser: Userable {
     public var id: IDable { return "" }
     public var mention: String { return "" }
+    
+    public func asBaseUser() -> BaseUser {
+        return BaseUser(id: self.id, mention: self.mention)
+    }
 }
 
 public struct DiscordMessage: Messageable {
-    public var channel: Channelable {
-        return _channel
-    }
-    private let _channel: DiscordChannel
+    public static var concreteType: Decodable.Type = DiscordMessage.self
+    public var channel: DiscordChannel
     public var content: String
-    public var author: Userable {
-        return _author
-    }
-    private let _author: DiscordUser
+    public var author: DiscordUser
+    
     public func reply(_ content: String) { }
     public func edit(_ content: String) { }
     public func delete() { }
-}
-
-extension Event {
-    public static var guildCreate: DiscordMType<Guild, DiscordEvent> {
-        return DiscordEvent.guildCreate
+    
+    public func asBaseMessage() -> BaseMessage {
+        return BaseMessage(channel: self.channel.asBaseChannel(), content: self.content, author: self.author.asBaseUser())
     }
 }
 
 public enum DiscordEvent: String, EventType {
     case _guildCreate = "GUILD_CREATE"
-    case _messageCreate
+    case _messageCreate = "MESSAGE_CREATE"
 
-    public static let guildCreate = DiscordMType(DiscordEvent._guildCreate, Guild.self)
-    public static let messageCreate = DiscordMType(DiscordEvent._messageCreate, DiscordMessage.self)
+    public static let guildCreate = _DiscordEvent(DiscordEvent._guildCreate, Guild.self)
+    public static let messageCreate = _DiscordEvent(DiscordEvent._messageCreate, DiscordMessage.self)
 }

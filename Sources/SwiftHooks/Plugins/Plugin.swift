@@ -15,7 +15,7 @@ extension Plugin {
     func registerListeners(to h: SwiftHooks) {
         Mirror(reflecting: self)
             .children
-            .compactMap { $0.value as? IListener }
+            .compactMap { $0.value as? _Listener }
             .forEach { listener in
                 listener.register(to: h)
         }

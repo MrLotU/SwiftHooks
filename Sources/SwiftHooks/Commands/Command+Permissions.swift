@@ -11,7 +11,7 @@ public protocol CommandPermissionChecker {
     ///     - event: Event holding the command & related info
     ///
     /// - Returns: Wether or not the user is allowed to execute the command
-    func check(_ user: Userable, canUse command: Command, on event: CommandEvent) -> Bool
+    func check(_ user: BaseUser, canUse command: Command, on event: CommandEvent) -> Bool
 }
 
 /// Checks if a user is allowed to execute based on their ID
@@ -27,7 +27,7 @@ public struct IDChecker: CommandPermissionChecker {
     /// List of whitelisted IDs
     let ids: [String]
     
-    public func check(_ user: Userable, canUse command: Command, on event: CommandEvent) -> Bool {
+    public func check(_ user: BaseUser, canUse command: Command, on event: CommandEvent) -> Bool {
         guard let id = user.id.asString() else { return false }
         return ids.contains(id)
     }

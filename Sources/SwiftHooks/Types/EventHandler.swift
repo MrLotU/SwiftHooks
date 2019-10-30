@@ -17,13 +17,7 @@ extension _Event {
     }
 }
 
-public enum Event {
-    public static var messageCreate: _GlobalEvent<Messageable, GlobalEvent> {
-        return GlobalEvent.messageCreate
-    }
-}
-
-public struct _GlobalEvent<ContentType, E: EventType>: _Event {
+public struct _GlobalEvent<E: EventType, ContentType>: _Event {
     public let event: E
 
     public init(_ e: E, _ t: ContentType.Type) {
@@ -34,7 +28,7 @@ public struct _GlobalEvent<ContentType, E: EventType>: _Event {
 public enum GlobalEvent: EventType {
     case _messageCreate
     
-    public static let messageCreate = _GlobalEvent(GlobalEvent._messageCreate, Messageable.self)
+    public static let messageCreate = _GlobalEvent(GlobalEvent._messageCreate, BaseMessage.self)
 }
 
 public extension Dictionary {

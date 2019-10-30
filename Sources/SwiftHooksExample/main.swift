@@ -19,6 +19,11 @@ class MyPlugin: Plugin {
     var guildListener = { guild in
         print("Other guild thing \(guild.name)")
     }
+    
+    @Listener(GlobalEvent.messageCreate)
+    var messageListener = { message in
+        print(message.content)
+    }
 }
 
 swiftHooks.register(MyPlugin())
@@ -37,34 +42,39 @@ struct MessagePayload: Payload {
         func send(_ msg: String) { }
         
         var mention: String = ""
+        
+        func asBaseChannel() -> BaseChannel {
+            BaseChannel(mention: mention)
+        }
     }
     struct U: Userable {
         var id: IDable {
-            return _id
+            return "abc"
         }
-        let _id: String = "abc"
         
         var mention: String = ""
+        func asBaseUser() -> BaseUser {
+            BaseUser(id: id, mention: mention)
+        }
     }
     struct M: Messageable {
-        var channel: Channelable {
-            return c
-        }
-        let c: C
+        static var concreteType: Decodable.Type = M.self
+        var channel: C
         var content: String
-        var author: Userable {
-            return a
-        }
-        let a: U
+        var author: U
         
         func reply(_ content: String) { }
         
         func edit(_ content: String) { }
         
         func delete() { }
+        
+        func asBaseMessage() -> BaseMessage {
+            return BaseMessage(channel: channel.asBaseChannel(), content: self.content, author: author.asBaseUser())
+        }
     }
     func getData<T>(_ type: T.Type, from: Data) -> T? {
-        return M(c: C(), content: "!ping", a: U()) as? T
+        return M(channel: C(), content: "!ping", author: U()).asBaseMessage() as? T
     }
 }
 

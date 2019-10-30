@@ -1,5 +1,15 @@
-public protocol Channelable: Codable {
-    func send(_ msg: String)
+public protocol Channelable: Codable {    
+    func asBaseChannel() -> BaseChannel
+}
+
+public struct BaseChannel {
+    var mention: String
     
-    var mention: String { get }
+    public init(mention: String) {
+        self.mention = mention
+    }
+    
+    func send(_ msg: String) {
+        
+    }
 }
