@@ -45,7 +45,7 @@ public final class DiscordHook: Hook {
     
     public func dispatchEvent<E>(_ event: E, with raw: Data) where E: EventType {
         defer {
-            self.hooks?.dispatchEvent(event, with: raw)
+            self.hooks?.dispatchEvent(event, with: raw, from: self)
         }
         guard let event = event as? DiscordEvent else { return }
         let handlers = self.discordListeners[event]
@@ -68,13 +68,11 @@ class DiscordEventTranslator: EventTranslator {
         }
     }
     
-//    static func decodableTypeForEvent<E, T>(_ event: E) -> T.Type? where E : EventType, T: Decodable {
-//        guard let e = event as? DiscordEvent else { return nil }
-//        switch e {
-//        case ._messageCreate: return DiscordMessage.self
-//        case ._guildCreate: return Guild.self
-//        }
-//    }
+    static func decodeConcreteType<T>(for event: GlobalEvent, with data: Data, as t: T.Type) -> T? {
+        switch event {
+        case ._messageCreate: return DiscordMessage(data) as? T
+        }
+    }
 }
 
 public struct DiscordHookOptions: HookOptions {

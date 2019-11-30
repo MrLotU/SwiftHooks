@@ -4,7 +4,7 @@ import Logging
 public final class SwiftHooks {
     public var hooks: [Hook]
     
-    public internal(set) var globalListeners: [GlobalEvent: [EventClosure]]
+    public internal(set) var globalListeners: [GlobalEvent: [GlobalEventClosure]]
     public internal(set) var commands: [Command]
     public internal(set) var plugins: [Plugin]
     

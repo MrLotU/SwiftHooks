@@ -22,10 +22,13 @@ class MyPlugin: Plugin {
     
     @Listener(DiscordEvent.messageCreate)
     var messageListener = { message in
-        print(message.content)
+        print("Discord: \(message.content)")
     }
     
-//    @Listener(M)
+    @GlobalListener(GlobalEvent.messageCreate)
+    var globalMessageListener = { message in
+        print("Global: \(message.content)")
+    }
 }
 
 swiftHooks.register(MyPlugin())
