@@ -1,11 +1,14 @@
+import Foundation
 import Logging
 
 public final class SwiftHooks {
     public var hooks: [Hook]
     
-    public internal(set) var globalListeners: [GlobalEvent: [EventClosure]]
+    public internal(set) var globalListeners: [GlobalEvent: [GlobalEventClosure]]
     public internal(set) var commands: [Command]
-    public internal(set) var plugins: [BasePlugin]
+    public internal(set) var plugins: [Plugin]
+    
+    public static let decoder = JSONDecoder()
     
     public init() {
         self.hooks = []
@@ -15,8 +18,8 @@ public final class SwiftHooks {
     }
 
     public func hook(_ hook: Hook) throws {
-        self.hooks.append(hook)
         try hook.boot()
+        self.hooks.append(hook)
     }
 }
 

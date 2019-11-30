@@ -1,27 +1,32 @@
 import Foundation
 
-public protocol CommandArgumentConvertible {
-    associatedtype ResolvedArgument = Self
-    
-    static var typedName: String { get }
-    static var canConsume: Bool { get }
-    static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> ResolvedArgument
-}
-
-extension CommandArgumentConvertible {
-    public static var typedName: String {
-        return "\(Self.self)"
+extension Command {
+    func getArg<A>(named name: String, on event: CommandEvent) throws -> A where A: CommandArgumentConvertible, A.ResolvedArgument == A {
+        return try self.get(A.self, named: name, on: event)
     }
     
-    public static var canConsume: Bool {
-        return false
-    }
-    
-    public static func argument(named name: String, argType: CommandArgumentType = .required) throws -> CommandArgument {
-        if argType.consumes && !self.canConsume {
-            throw CommandError.ArgumentCanNotConsume
+    func get<A>(_ arg: A.Type, named name: String, on event: CommandEvent) throws -> A.ResolvedArgument where A: CommandArgumentConvertible {
+        guard let foundArg = self.arguments.first(where: {
+            $0.componentType == arg.typedName &&
+            $0.componentName == name
+        }), let index = arguments.firstIndex(of: foundArg) else {
+            throw CommandError.ArgumentNotFound(name)
         }
-        return CommandArgument(componentType: self.typedName, componentName: name, type: argType)
+        func parse(_ s: String) throws -> A.ResolvedArgument {
+            if !foundArg.type.optional && s.isEmpty {
+                throw CommandError.ArgumentNotFound(name)
+            }
+            return try A.resolveArgument(s, on: event)
+        }
+        if foundArg.type.consumes {
+            guard A.canConsume else { throw CommandError.ArgumentCanNotConsume }
+            let string = event.args[index...].joined(separator: " ")
+            return try parse(string)
+        }
+        guard let string = event.args[safe:index] else {
+            throw CommandError.ArgumentNotFound(name)
+        }
+        return try parse(string)
     }
 }
 
@@ -54,80 +59,8 @@ public struct CommandArgument: CustomStringConvertible, Equatable {
     }
 }
 
-extension String: CommandArgumentConvertible {
-    public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> String {
-        return argument
-    }
-    
-    public static var canConsume: Bool {
-        return true
-    }
-}
-
-extension FixedWidthInteger {
-    public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> Self {
-        guard let number = Self(argument) else {
-            throw CommandError.UnableToConvertArgument(argument, "\(self.self)")
-        }
-        return number
-    }
-}
-
-extension Int: CommandArgumentConvertible { }
-extension Int8: CommandArgumentConvertible { }
-extension Int16: CommandArgumentConvertible { }
-extension Int32: CommandArgumentConvertible { }
-extension Int64: CommandArgumentConvertible { }
-extension UInt: CommandArgumentConvertible { }
-extension UInt8: CommandArgumentConvertible { }
-extension UInt16: CommandArgumentConvertible { }
-extension UInt32: CommandArgumentConvertible { }
-extension UInt64: CommandArgumentConvertible { }
-
-extension BinaryFloatingPoint {
-    public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> Self {
-        guard let number = Double(argument) else {
-            throw CommandError.UnableToConvertArgument(argument, "\(self.self)")
-        }
-        return Self(number)
-    }
-}
-
-
-extension Float: CommandArgumentConvertible { }
-extension Double: CommandArgumentConvertible { }
-
-extension UUID: CommandArgumentConvertible {
-    public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> UUID {
-        guard let uuid = UUID(uuidString: argument) else {
-            throw CommandError.UnableToConvertArgument(argument, "\(self.self)")
-        }
-        return uuid
-    }
-}
-
-extension Array: CommandArgumentConvertible where Element: CommandArgumentConvertible {
-    public typealias ResolvedArgument = [Element.ResolvedArgument]
-    
-    public static var typedName: String {
-        return "\(Element.typedName)"
-    }
-    
-    public static func argument(named name: String, argType: CommandArgumentType = .required) throws -> CommandArgument {
-        let argType: CommandArgumentType = argType.optional ? .optionalConsume : .requiredConsume
-        return CommandArgument(componentType: self.typedName, componentName: name, type: argType)
-    }
-    
-    public static var canConsume: Bool {
-        return true
-    }
-    
-    public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> ResolvedArgument {
-        let args = argument.split(separator: " ").map(String.init)
-        var arr: ResolvedArgument = []
-        try args.forEach {
-            try arr.append(Element.resolveArgument($0, on: event))
-        }
-        return arr
+extension Array {
+    subscript(safe index: Int) -> Element? {
+        return (index >= 0 && index < count) ? self[Int(index)] : nil
     }
 }

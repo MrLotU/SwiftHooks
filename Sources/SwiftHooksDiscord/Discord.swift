@@ -20,6 +20,9 @@ public final class DiscordHook: Hook {
     public func boot() throws { SwiftHooks.logger.info("Connecting \(self.self)") }
     public func shutDown() throws { SwiftHooks.logger.info("Shutting down \(self.self)") }
     public static let id: HookID = .discord
+    public var translator: EventTranslator.Type {
+        return DiscordEventTranslator.self
+    }
 
     var token: String
     
@@ -27,11 +30,11 @@ public final class DiscordHook: Hook {
     
     public weak var hooks: SwiftHooks?
     
-    public func listen<T, I>(for event: T, handler: @escaping EventHandler<I>) where T : MType, I == T.ContentType {
-        guard let event = event as? DiscordMType<I, DiscordEvent> else { return }
+    public func listen<T, I>(for event: T, handler: @escaping EventHandler<I>) where T : _Event, I == T.ContentType {
+        guard let event = event as? _DiscordEvent<DiscordEvent, I> else { return }
         var closures = self.discordListeners[event, default: []]
-        closures.append { (event, data) in
-            guard let object = event.getData(I.self, from: data) else {
+        closures.append { (data) in
+            guard let object = I.init(data) else {
                 SwiftHooks.logger.debug("Unable to extract \(I.self) from data.")
                 return
             }
@@ -40,19 +43,35 @@ public final class DiscordHook: Hook {
         self.discordListeners[event] = closures
     }
     
-    public func dispatchEvent<E>(_ event: E, with payload: Payload, raw: Data) where E: EventType {
+    public func dispatchEvent<E>(_ event: E, with raw: Data) where E: EventType {
         defer {
-            self.hooks?.dispatchEvent(event, with: payload, raw: raw)
+            self.hooks?.dispatchEvent(event, with: raw, from: self)
         }
         guard let event = event as? DiscordEvent else { return }
         let handlers = self.discordListeners[event]
         handlers?.forEach({ (handler) in
             do {
-                try handler(payload, raw)
+                try handler(raw)
             } catch {
                 SwiftHooks.logger.error("\(error.localizedDescription)")
             }
         })
+    }
+}
+
+class DiscordEventTranslator: EventTranslator {
+    static func translate<E>(_ event: E) -> GlobalEvent? where E : EventType {
+        guard let e = event as? DiscordEvent else { return nil }
+        switch e {
+        case ._messageCreate: return ._messageCreate
+        default: return nil
+        }
+    }
+    
+    static func decodeConcreteType<T>(for event: GlobalEvent, with data: Data, as t: T.Type) -> T? {
+        switch event {
+        case ._messageCreate: return DiscordMessage(data) as? T
+        }
     }
 }
 
@@ -66,29 +85,61 @@ public struct DiscordHookOptions: HookOptions {
     }
 }
 
-public struct DiscordMType<ContentType, E: EventType>: MType {
+public struct _DiscordEvent<E: EventType, ContentType: PayloadType>: _Event {
     public let event: E
     public init(_ e: E, _ t: ContentType.Type) {
         self.event = e
     }
 }
 
-public struct Guild {
+public struct Guild: Codable, PayloadType {
     public let name: String
+    
+    public init?(_ data: Data) {
+        self.name = "abc"
+    }
     
     public init(_ name: String) {
         self.name = name
     }
 }
 
-extension Event {
-    public static var guildCreate: DiscordMType<Guild, DiscordEvent> {
-        return DiscordEvent.guildCreate
-    }
+public struct DiscordChannel: Channelable {
+    public func send(_ msg: String) { }
+    public var mention: String { return "" }
+    
+    init() { }
 }
 
-public enum DiscordEvent: EventType {
-    case _guildCreate
+public struct DiscordUser: Userable {
+    public var id: IDable { return "" }
+    public var mention: String { return "" }
+    
+    init() { }
+}
 
-    public static let guildCreate = DiscordMType(DiscordEvent._guildCreate, Guild.self)
+public struct DiscordMessage: Messageable {
+    public var channel: Channelable { _channel }
+    public var _channel: DiscordChannel
+    public var content: String
+    public var author: Userable { _author }
+    public var _author: DiscordUser
+    
+    public init?(_ data: Data) {
+        self._author = DiscordUser()
+        self._channel = DiscordChannel()
+        self.content = "!ping"
+    }
+    
+    public func reply(_ content: String) { }
+    public func edit(_ content: String) { }
+    public func delete() { }
+}
+
+public enum DiscordEvent: String, EventType {
+    case _guildCreate = "GUILD_CREATE"
+    case _messageCreate = "MESSAGE_CREATE"
+
+    public static let guildCreate = _DiscordEvent(DiscordEvent._guildCreate, Guild.self)
+    public static let messageCreate = _DiscordEvent(DiscordEvent._messageCreate, DiscordMessage.self)
 }
