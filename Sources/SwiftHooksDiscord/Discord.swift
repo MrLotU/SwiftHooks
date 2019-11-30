@@ -128,7 +128,7 @@ public struct DiscordMessage: Messageable {
     public init?(_ data: Data) {
         self._author = DiscordUser()
         self._channel = DiscordChannel()
-        self.content = "Fancy discord content!"
+        self.content = "!ping"
     }
     
     public func reply(_ content: String) { }
