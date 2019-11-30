@@ -1,9 +1,22 @@
+import struct Foundation.Data
+
 public typealias EventHandler<I> = (I) throws -> Void
 
 public protocol EventType: Hashable {}
 
+public protocol PayloadType: Decodable {
+    init?(_ data: Data)
+}
+
+extension PayloadType {
+    public init?(_ data: Data) {
+        guard let g = try? SwiftHooks.decoder.decode(Self.self, from: data) else { return nil }
+        self = g
+    }
+}
+
 public protocol _Event: Hashable {
-    associatedtype ContentType
+    associatedtype ContentType: PayloadType
     associatedtype E: EventType
     var event: E { get }
     init(_ e: E, _ t: ContentType.Type)
@@ -17,7 +30,7 @@ extension _Event {
     }
 }
 
-public struct _GlobalEvent<E: EventType, ContentType>: _Event {
+public struct _GlobalEvent<E: EventType, ContentType: PayloadType>: _Event {
     public let event: E
 
     public init(_ e: E, _ t: ContentType.Type) {
@@ -28,7 +41,7 @@ public struct _GlobalEvent<E: EventType, ContentType>: _Event {
 public enum GlobalEvent: EventType {
     case _messageCreate
     
-    public static let messageCreate = _GlobalEvent(GlobalEvent._messageCreate, BaseMessage.self)
+//    public static let messageCreate = _GlobalEvent(GlobalEvent._messageCreate, Messageable.self)
 }
 
 public extension Dictionary {

@@ -20,10 +20,12 @@ class MyPlugin: Plugin {
         print("Other guild thing \(guild.name)")
     }
     
-    @Listener(GlobalEvent.messageCreate)
+    @Listener(DiscordEvent.messageCreate)
     var messageListener = { message in
         print(message.content)
     }
+    
+//    @Listener(M)
 }
 
 swiftHooks.register(MyPlugin())
@@ -31,21 +33,17 @@ swiftHooks.register(MyPlugin())
 print(swiftHooks.commands)
 print(swiftHooks.globalListeners)
 
-struct TempPayload: Payload {
-    func getData<T>(_ type: T.Type, from: Data) -> T? {
-        return Guild("Guild") as? T
-    }
-}
+//struct TempPayload: Payload {
+//    func getData<T>(_ type: T.Type, from: Data) -> T? {
+//        return Guild("Guild") as? T
+//    }
+//}
 
-struct MessagePayload: Payload {
+struct MessagePayload {
     struct C: Channelable {
         func send(_ msg: String) { }
         
         var mention: String = ""
-        
-        func asBaseChannel() -> BaseChannel {
-            BaseChannel(mention: mention)
-        }
     }
     struct U: Userable {
         var id: IDable {
@@ -53,15 +51,14 @@ struct MessagePayload: Payload {
         }
         
         var mention: String = ""
-        func asBaseUser() -> BaseUser {
-            BaseUser(id: id, mention: mention)
-        }
     }
     struct M: Messageable {
         static var concreteType: Decodable.Type = M.self
-        var channel: C
+        var _channel: C
+        var channel: Channelable { _channel }
         var content: String
-        var author: U
+        var _author: U
+        var author: Userable { _author }
         
         func reply(_ content: String) { }
         
@@ -69,12 +66,11 @@ struct MessagePayload: Payload {
         
         func delete() { }
         
-        func asBaseMessage() -> BaseMessage {
-            return BaseMessage(channel: channel.asBaseChannel(), content: self.content, author: author.asBaseUser())
+        public init?(_ data: Data) {
+            self._author = U()
+            self.content = "!ping"
+            self._channel = C()
         }
-    }
-    func getData<T>(_ type: T.Type, from: Data) -> T? {
-        return M(channel: C(), content: "!ping", author: U()).asBaseMessage() as? T
     }
 }
 
@@ -85,7 +81,8 @@ let discordHook = swiftHooks.hooks.compactMap {
 print(discordHook.discordListeners)
 
 let event = DiscordEvent._guildCreate
-let mEvent = GlobalEvent._messageCreate
+let mEvent = DiscordEvent._messageCreate
+//let mEvent = GlobalEvent._messageCreate
 
-discordHook.dispatchEvent(event, with: TempPayload(), raw: Data())
-discordHook.dispatchEvent(mEvent, with: MessagePayload(), raw: Data())
+discordHook.dispatchEvent(event, with: Data())
+discordHook.dispatchEvent(mEvent, with: Data())

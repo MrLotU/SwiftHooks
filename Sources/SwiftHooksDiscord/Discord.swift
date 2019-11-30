@@ -33,8 +33,8 @@ public final class DiscordHook: Hook {
     public func listen<T, I>(for event: T, handler: @escaping EventHandler<I>) where T : _Event, I == T.ContentType {
         guard let event = event as? _DiscordEvent<DiscordEvent, I> else { return }
         var closures = self.discordListeners[event, default: []]
-        closures.append { (event, data) in
-            guard let object = event.getData(I.self, from: data) else {
+        closures.append { (data) in
+            guard let object = I.init(data) else {
                 SwiftHooks.logger.debug("Unable to extract \(I.self) from data.")
                 return
             }
@@ -43,15 +43,15 @@ public final class DiscordHook: Hook {
         self.discordListeners[event] = closures
     }
     
-    public func dispatchEvent<E>(_ event: E, with payload: Payload, raw: Data) where E: EventType {
+    public func dispatchEvent<E>(_ event: E, with raw: Data) where E: EventType {
         defer {
-            self.hooks?.dispatchEvent(event, with: payload, raw: raw)
+            self.hooks?.dispatchEvent(event, with: raw)
         }
         guard let event = event as? DiscordEvent else { return }
         let handlers = self.discordListeners[event]
         handlers?.forEach({ (handler) in
             do {
-                try handler(payload, raw)
+                try handler(raw)
             } catch {
                 SwiftHooks.logger.error("\(error.localizedDescription)")
             }
@@ -87,15 +87,19 @@ public struct DiscordHookOptions: HookOptions {
     }
 }
 
-public struct _DiscordEvent<E: EventType, ContentType>: _Event {
+public struct _DiscordEvent<E: EventType, ContentType: PayloadType>: _Event {
     public let event: E
     public init(_ e: E, _ t: ContentType.Type) {
         self.event = e
     }
 }
 
-public struct Guild: Codable {
+public struct Guild: Codable, PayloadType {
     public let name: String
+    
+    public init?(_ data: Data) {
+        self.name = "abc"
+    }
     
     public init(_ name: String) {
         self.name = name
@@ -105,33 +109,33 @@ public struct Guild: Codable {
 public struct DiscordChannel: Channelable {
     public func send(_ msg: String) { }
     public var mention: String { return "" }
-    public func asBaseChannel() -> BaseChannel {
-        return BaseChannel(mention: self.mention)
-    }
+    
+    init() { }
 }
 
 public struct DiscordUser: Userable {
     public var id: IDable { return "" }
     public var mention: String { return "" }
     
-    public func asBaseUser() -> BaseUser {
-        return BaseUser(id: self.id, mention: self.mention)
-    }
+    init() { }
 }
 
 public struct DiscordMessage: Messageable {
-    public static var concreteType: Decodable.Type = DiscordMessage.self
-    public var channel: DiscordChannel
+    public var channel: Channelable { _channel }
+    public var _channel: DiscordChannel
     public var content: String
-    public var author: DiscordUser
+    public var author: Userable { _author }
+    public var _author: DiscordUser
+    
+    public init?(_ data: Data) {
+        self._author = DiscordUser()
+        self._channel = DiscordChannel()
+        self.content = "Fancy discord content!"
+    }
     
     public func reply(_ content: String) { }
     public func edit(_ content: String) { }
     public func delete() { }
-    
-    public func asBaseMessage() -> BaseMessage {
-        return BaseMessage(channel: self.channel.asBaseChannel(), content: self.content, author: self.author.asBaseUser())
-    }
 }
 
 public enum DiscordEvent: String, EventType {

@@ -1,5 +1,5 @@
 extension SwiftHooks {
-    func handleMessage(_ message: BaseMessage) {
+    func handleMessage(_ message: Messageable) {
         let foundCommands = self.findCommands(for: message)
         
         foundCommands.forEach { (command) in
@@ -22,7 +22,7 @@ extension SwiftHooks {
         }
     }
     
-    func findCommands(for message: BaseMessage) -> [Command] {
+    func findCommands(for message: Messageable) -> [Command] {
         return self.commands.compactMap { return message.content.starts(with: "!" + $0.fullTrigger) ? $0 : nil }
     }
 }
@@ -37,12 +37,12 @@ enum CommandError: Error {
 
 public struct CommandEvent {
     public let hooks: SwiftHooks
-    public let user: BaseUser
+    public let user: Userable
     public let args: [String]
-    public let message: BaseMessage
+    public let message: Messageable
     public let name: String
     
-    public init(hooks: SwiftHooks, cmd: Command, msg: BaseMessage) {
+    public init(hooks: SwiftHooks, cmd: Command, msg: Messageable) {
         self.hooks = hooks
         self.user = msg.author
         self.message = msg

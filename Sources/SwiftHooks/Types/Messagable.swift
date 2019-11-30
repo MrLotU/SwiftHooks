@@ -1,28 +1,9 @@
-public protocol Messageable: Codable, SwiftHooksPayloadType {
-    func asBaseMessage() -> BaseMessage
-}
-
-
-public struct BaseMessage {
-    public var channel: BaseChannel
-    public var content: String
-    public var author: BaseUser
-    
-    public init(channel: BaseChannel, content: String, author: BaseUser) {
-        self.channel = channel
-        self.content = content
-        self.author = author
-    }
-    
-    public func reply(_ content: String) {
+public protocol Messageable: PayloadType {
+    var channel: Channelable { get }
+    var content: String { get }
+    var author: Userable { get }
         
-    }
-    
-    public func edit(_ content: String) {
-        
-    }
-    
-    public func delete() {
-        
-    }
+    func reply(_ content: String)
+    func edit(_ content: String)
+    func delete()
 }
