@@ -1,11 +1,13 @@
 import struct Foundation.Data
+import class Metrics.Counter
 
 public typealias EventClosure = (Data) throws -> Void
-public typealias GlobalEventClosure = (Data, Hook) throws -> Void
+public typealias GlobalEventClosure = (Data, _Hook) throws -> Void
 
 extension SwiftHooks {
-    public func dispatchEvent<E>(_ event: E, with raw: Data, from h: Hook) where E: EventType {
-        guard let event = h.translator.translate(event) else { return }
+    public func dispatchEvent<E>(_ e: E, with raw: Data, from h: _Hook) where E: EventType {
+        guard let event = h.translator.translate(e) else { print("Failed to translate \(e) on \(h)"); return }
+        Counter(label: "global_events_dispatched", dimensions: [("hook", type(of: h).id.identifier), ("event", "\(event)")]).increment()
         self.handleInternals(event, with: raw, from: h)
         
         let handlers = self.globalListeners[event]
@@ -18,7 +20,7 @@ extension SwiftHooks {
         })
     }
     
-    private func handleInternals(_ event: GlobalEvent, with raw: Data, from h: Hook) {
+    private func handleInternals(_ event: GlobalEvent, with raw: Data, from h: _Hook) {
         if event == ._messageCreate, let m = h.translator.decodeConcreteType(for: event, with: raw, as: Messageable.self) {
             self.handleMessage(m)
         }

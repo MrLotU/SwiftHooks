@@ -1,3 +1,4 @@
+import NIO
 import Foundation
 
 extension HookID {
@@ -7,18 +8,26 @@ extension HookID {
 }
 
 public final class DiscordHook: Hook {
-    public init<O>(_ options: O, hooks: SwiftHooks?) where DiscordHook == O.H, O : HookOptions {
-        guard let options = options as? DiscordHookOptions else {
-            fatalError("DiscordHook must always be initialized with `DiscordHookOptions`")
-        }
-        
+    public typealias Options = DiscordHookOptions
+    
+    public init(_ options: DiscordHookOptions, hooks: SwiftHooks?) {
         self.token = options.token
         self.hooks = hooks
         self.discordListeners = [:]
     }
-    
-    public func boot() throws { SwiftHooks.logger.info("Connecting \(self.self)") }
-    public func shutDown() throws { SwiftHooks.logger.info("Shutting down \(self.self)") }
+    public func boot(on elg: EventLoopGroup) throws {
+        SwiftHooks.logger.info("Booting \(self.self)")
+        let event = DiscordEvent._guildCreate
+        let mEvent = DiscordEvent._messageCreate
+
+        self.dispatchEvent(event, with: Data())
+        self.dispatchEvent(mEvent, with: Data())
+        
+        elg.next().scheduleTask(in: .seconds(5)) {
+            self.dispatchEvent(mEvent, with: Data())
+        }
+    }
+    public func shutdown() { SwiftHooks.logger.info("Shutting down \(self.self)") }
     public static let id: HookID = .discord
     public var translator: EventTranslator.Type {
         return DiscordEventTranslator.self
