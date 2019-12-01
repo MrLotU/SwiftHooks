@@ -6,8 +6,6 @@ let package = Package(
     name: "SwiftHooks",
     products: [
         .library(name: "SwiftHooks", targets: ["SwiftHooks"]),
-        .library(name: "SwiftHooksDiscord", targets: ["SwiftHooksDiscord"]),
-        .executable(name: "SwiftHooksExample", targets: ["SwiftHooksExample"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.10.0"),
@@ -18,12 +16,6 @@ let package = Package(
         .target(
             name: "SwiftHooks",
             dependencies: ["Logging", "NIO", "Metrics"]),
-        .target(
-            name: "SwiftHooksDiscord",
-            dependencies: ["SwiftHooks"]),
-        .target(
-            name: "SwiftHooksExample",
-            dependencies: ["SwiftHooks", "SwiftHooksDiscord"]),
         .testTarget(
             name: "SwiftHooksTests",
             dependencies: ["SwiftHooks"]),
