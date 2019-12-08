@@ -6,7 +6,7 @@ public typealias GlobalEventClosure = (Data, _Hook) throws -> Void
 
 extension SwiftHooks {
     public func dispatchEvent<E>(_ e: E, with raw: Data, from h: _Hook) where E: EventType {
-        guard let event = h.translator.translate(e) else { print("Failed to translate \(e) on \(h)"); return }
+        guard let event = h.translator.translate(e) else { return }
         Counter(label: "global_events_dispatched", dimensions: [("hook", type(of: h).id.identifier), ("event", "\(event)")]).increment()
         self.handleInternals(event, with: raw, from: h)
         

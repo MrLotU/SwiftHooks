@@ -34,7 +34,7 @@ public final class Command {
         self.userInfo = userInfo
     }
 
-    
+
     public init(_ name: String, args: [CommandArgument] = [], group: String? = nil, aliases: [String] = [], permChecks: [CommandPermissionChecker] = [], userInfo: [String: Any] = [:]) {
         self.name = name
         self.arguments = args

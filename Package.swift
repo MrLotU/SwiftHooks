@@ -8,7 +8,7 @@ let package = Package(
         .library(name: "SwiftHooks", targets: ["SwiftHooks"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.10.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", .branch("master")),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-metrics.git", from: "1.2.0")
     ],

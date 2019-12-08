@@ -14,6 +14,7 @@ public final class SwiftHooks {
     public internal(set) var plugins: [Plugin]
     
     public static let decoder = JSONDecoder()
+    public static let encoder = JSONEncoder()
     
     public init(eventLoopGroup: EventLoopGroup? = nil) {
         if let elg = eventLoopGroup {

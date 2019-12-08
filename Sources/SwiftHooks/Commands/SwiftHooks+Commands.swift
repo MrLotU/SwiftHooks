@@ -27,7 +27,7 @@ extension SwiftHooks {
     }
 }
 
-enum CommandError: Error {
+public enum CommandError: Error {
     case InvalidPermissions
     case ArgumentCanNotConsume
     case UnableToConvertArgument(String, String)
