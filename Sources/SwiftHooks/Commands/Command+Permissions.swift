@@ -28,7 +28,7 @@ public struct IDChecker: CommandPermissionChecker {
     let ids: [String]
     
     public func check(_ user: Userable, canUse command: Command, on event: CommandEvent) -> Bool {
-        guard let id = user.id.asString() else { return false }
+        guard let id = user.identifier else { return false }
         return ids.contains(id)
     }
 }

@@ -1,4 +1,4 @@
 public protocol Userable: PayloadType {
-    var id: IDable { get }
+    var identifier: String? { get }
     var mention: String { get }
 }
