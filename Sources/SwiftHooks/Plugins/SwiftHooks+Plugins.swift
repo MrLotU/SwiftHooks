@@ -5,3 +5,9 @@ extension SwiftHooks {
         plugin.registerListeners(to: self)
     }
 }
+
+extension _Hook {
+    public func register(_ plugin: Plugin) {
+        plugin.registerListeners(to: self)
+    }
+}

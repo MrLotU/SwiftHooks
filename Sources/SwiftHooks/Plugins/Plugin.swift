@@ -12,12 +12,21 @@ extension Plugin {
             }
     }
     
-    func registerListeners(to h: SwiftHooks) {
-        Mirror(reflecting: self)
-            .children
-            .compactMap { $0.value as? _Listener }
-            .forEach { listener in
+    func registerListeners(to h: _Hook) {
+        listeners.forEach { listener in
                 listener.register(to: h)
         }
+    }
+    
+    func registerListeners(to h: SwiftHooks) {
+        listeners.forEach { listener in
+                listener.register(to: h)
+        }
+    }
+    
+    var listeners: [_Listener] {
+        return Mirror(reflecting: self)
+            .children
+            .compactMap { $0.value as? _Listener }
     }
 }
