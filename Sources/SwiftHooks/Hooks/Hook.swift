@@ -13,14 +13,15 @@ public struct HookID: Hashable {
 public protocol Hook: _Hook {
     associatedtype Options: HookOptions
     
-    init<O>(_ options: O) where O == Options
+    init<O>(_ options: O, _ elg: EventLoopGroup) where O == Options
 }
 
 public protocol _Hook {
-    func boot(on elg: EventLoopGroup, hooks: SwiftHooks?) throws
+    func boot(hooks: SwiftHooks?) throws
     func shutdown()
     
     var hooks: SwiftHooks? { get }
+    var eventLoopGroup: EventLoopGroup { get }
     static var id: HookID { get }
     var translator: EventTranslator.Type { get }
         
@@ -29,8 +30,8 @@ public protocol _Hook {
 }
 
 public extension _Hook {
-    func boot(on elg: EventLoopGroup) throws {
-        try self.boot(on: elg, hooks: nil)
+    func boot() throws {
+        try self.boot(hooks: nil)
     }
 }
 
@@ -38,7 +39,7 @@ public protocol HookOptions { }
 
 public extension SwiftHooks {
     func hook<H, O>(_ hook: H.Type, _ options: O) throws where H: Hook, H.Options == O {
-        let hook = hook.init(options)
+        let hook = hook.init(options, self.eventLoopGroup)
         self.hooks.append(hook)
     }
 }

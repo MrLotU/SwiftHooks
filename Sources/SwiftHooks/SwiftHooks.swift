@@ -50,7 +50,7 @@ public final class SwiftHooks {
         guard !self.isBooted else { return }
         logger.info("Booting SwiftHooks")
         self.isBooted = true
-        try self.hooks.forEach { try $0.boot(on: self.eventLoopGroup, hooks: self) }
+        try self.hooks.forEach { try $0.boot(hooks: self) }
     }
     
     func shutdown() {
