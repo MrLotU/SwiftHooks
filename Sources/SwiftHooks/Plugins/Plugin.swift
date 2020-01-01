@@ -1,4 +1,4 @@
-public protocol Plugin: class { }
+public protocol Plugin { }
 
 extension Plugin {
     var commands: [Command] {

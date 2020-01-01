@@ -5,13 +5,13 @@ public typealias EventHandler<I> = (I) throws -> Void
 public protocol EventType: Hashable {}
 
 public protocol PayloadType: Decodable {
-    init?(_ data: Data)
+    static func create(from data: Data) -> Self?
 }
 
-extension PayloadType {
-    public init?(_ data: Data) {
+public extension PayloadType {
+    static func create(from data: Data) -> Self? {
         guard let g = try? SwiftHooks.decoder.decode(Self.self, from: data) else { return nil }
-        self = g
+        return g
     }
 }
 

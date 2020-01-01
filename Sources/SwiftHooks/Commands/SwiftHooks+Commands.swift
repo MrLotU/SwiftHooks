@@ -44,7 +44,7 @@ public struct CommandEvent {
     
     public init(hooks: SwiftHooks, cmd: Command, msg: Messageable) {
         self.hooks = hooks
-        self.user = msg.author
+        self.user = msg.gAuthor
         self.message = msg
         var comps = msg.content.split(separator: " ")
         let hasGroup = cmd.group != nil

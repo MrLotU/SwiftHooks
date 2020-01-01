@@ -1,7 +1,7 @@
 public protocol Messageable: PayloadType {
-    var channel: Channelable { get }
+    var gChannel: Channelable { get }
     var content: String { get }
-    var author: Userable { get }
+    var gAuthor: Userable { get }
         
     func reply(_ content: String)
     func edit(_ content: String)
