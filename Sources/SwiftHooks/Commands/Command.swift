@@ -24,6 +24,7 @@ public final class Command {
         try wrappedValue(hooks, event, self)
     }
     
+    #if swift(>=5.2)
     public init(wrappedValue c: @escaping CommandClosure, _ name: String, _ args: CommandArgument..., group: String? = nil, aliases: [String] = [], permChecks: [CommandPermissionChecker] = [], userInfo: [String: Any] = [:]) {
         self.wrappedValue = c
         self.name = name
@@ -44,4 +45,35 @@ public final class Command {
         self.userInfo = userInfo
         self.wrappedValue = { _, _, _ in }
     }
+    #else
+    public init(wrappedValue c: @escaping CommandClosure, _ name: String, _ args: [CommandArgument], group: String?, aliases: [String], permChecks: [CommandPermissionChecker], userInfo: [String: Any]) {
+        self.wrappedValue = c
+        self.name = name
+        self.arguments = args
+        self.group = group
+        self.aliases = aliases
+        self.permChecks = permChecks
+        self.userInfo = userInfo
+    }
+    
+    public convenience init(wrappedValue c: @escaping CommandClosure, _ name: String) {
+        self.init(wrappedValue: c, name, [], group: nil, aliases: [], permChecks: [], userInfo: [:])
+    }
+
+    public convenience init(wrappedValue c: @escaping CommandClosure, _ name: String, _ args: [CommandArgument]) {
+        self.init(wrappedValue: c, name, args, group: nil, aliases: [], permChecks: [], userInfo: [:])
+    }
+
+    public convenience init(wrappedValue c: @escaping CommandClosure, _ name: String, _ args: [CommandArgument], group: String?) {
+        self.init(wrappedValue: c, name, args, group: group, aliases: [], permChecks: [], userInfo: [:])
+    }
+
+    public convenience init(wrappedValue c: @escaping CommandClosure, _ name: String, _ args: [CommandArgument], group: String?, aliases: [String]) {
+        self.init(wrappedValue: c, name, args, group: nil, aliases: aliases, permChecks: [], userInfo: [:])
+    }
+
+    public convenience init(wrappedValue c: @escaping CommandClosure, _ name: String, _ args: [CommandArgument], group: String?, aliases: [String], permChecks: [CommandPermissionChecker]) {
+        self.init(wrappedValue: c, name, args, group: nil, aliases: aliases, permChecks: permChecks, userInfo: [:])
+    }
+    #endif
 }
