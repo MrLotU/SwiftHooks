@@ -3,7 +3,6 @@ import protocol NIO.EventLoop
 public protocol _GEvent: Hashable {
     associatedtype ContentType
     associatedtype E: EventType
-//    associatedtype D: EventDispatch
     var event: E { get }
     init(_ e: E, _ t: ContentType.Type)
 }
@@ -18,7 +17,7 @@ extension _GEvent {
 
 public struct _GlobalEvent<ContentType>: _GEvent {
     public typealias E = GlobalEvent
-//    public typealias D = GlobalDispatch<ContentType>
+    public typealias D = GlobalDispatch
     public let event: E
 
     public init(_ e: E, _ t: ContentType.Type) {
@@ -26,10 +25,15 @@ public struct _GlobalEvent<ContentType>: _GEvent {
     }
 }
 
-//struct GlobalDispatch<C: PayloadType>: EventDispatch {
-//    let c: C
-//    let eventLoop: EventLoop
-//}
+public struct GlobalDispatch: EventDispatch {
+    public init?(_ h: _Hook) {
+        return nil
+    }
+    
+    public init(_ eventLoop: EventLoop) { self.eventLoop = eventLoop }
+    
+    public let eventLoop: EventLoop
+}
 
 public enum GlobalEvent: EventType {
     case _messageCreate
