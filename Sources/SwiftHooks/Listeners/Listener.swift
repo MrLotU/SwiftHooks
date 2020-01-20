@@ -6,40 +6,40 @@ protocol _Listener {
 @propertyWrapper
 public final class GlobalListener<T, I>: _Listener where T: _GEvent, T.ContentType == I {
     let event: T
-    
-    public var wrappedValue: EventHandler<I>
-    
-    public init(wrappedValue: @escaping EventHandler<I>, _ event: T) {
+
+    public var wrappedValue: EventHandler<GlobalDispatch, I>
+
+    public init(wrappedValue: @escaping EventHandler<GlobalDispatch, I>, _ event: T) {
         self.event = event
         self.wrappedValue = wrappedValue
     }
-    
+
     public init(_ event: T) {
         self.event = event
-        self.wrappedValue = { _ in }
+        self.wrappedValue = { _, _ in }
     }
-    
+
     func register(to h: SwiftHooks) {
         h.gListen(for: event, wrappedValue)
     }
-    
+
     func register(to h: _Hook) { }
 }
 
 @propertyWrapper
-public final class Listener<T, I>: _Listener where T: _Event, T.ContentType == I {
+public final class Listener<T, I, D>: _Listener where T: _Event, T.ContentType == I, T.D == D {
     let event: T
     
-    public var wrappedValue: EventHandler<I>
+    public var wrappedValue: EventHandler<D, I>
     
-    public init(wrappedValue: @escaping EventHandler<I>, _ event: T) {
+    public init(wrappedValue: @escaping EventHandler<D, I>, _ event: T) {
         self.event = event
         self.wrappedValue = wrappedValue
     }
     
     public init(_ event: T) {
         self.event = event
-        self.wrappedValue = { _ in }
+        self.wrappedValue = { _, _ in }
     }
     
     func register(to h: SwiftHooks) {
