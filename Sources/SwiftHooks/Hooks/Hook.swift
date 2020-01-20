@@ -23,10 +23,12 @@ public protocol _Hook {
     var hooks: SwiftHooks? { get }
     var eventLoopGroup: EventLoopGroup { get }
     static var id: HookID { get }
-    var translator: EventTranslator.Type { get }
         
-    func listen<T, I>(for event: T, handler: @escaping EventHandler<I>) where T: _Event, T.ContentType == I
+    func listen<T, I, D>(for event: T, handler: @escaping EventHandler<D, I>) where T: _Event, T.ContentType == I, T.D == D
     func dispatchEvent<E>(_ event: E, with raw: Data) where E: EventType
+    
+    func translate<E>(_ event: E) -> GlobalEvent? where E: EventType
+    func decodeConcreteType<T>(for event: GlobalEvent, with data: Data, as t: T.Type) -> T?
 }
 
 public extension _Hook {
