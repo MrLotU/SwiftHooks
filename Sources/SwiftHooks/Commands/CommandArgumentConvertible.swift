@@ -6,7 +6,6 @@ public protocol CommandArgumentConvertible {
     static var typedName: String { get }
     static var canConsume: Bool { get }
     static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> ResolvedArgument
-    static func resolveArgument(_ argument: String) throws -> ResolvedArgument
 }
 
 extension CommandArgumentConvertible {
@@ -34,20 +33,9 @@ extension String: CommandArgumentConvertible {
     public static var canConsume: Bool {
         return true
     }
-
-    public static func resolveArgument(_ argument: String) throws -> String {
-        return argument
-    }
 }
 
 extension FixedWidthInteger {
-    public static func resolveArgument(_ argument: String) throws -> Self {
-        guard let number = Self(argument) else {
-            throw CommandError.UnableToConvertArgument(argument, "\(self.self)")
-        }
-        return number
-    }
-    
     public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> Self {
         guard let number = Self(argument) else {
             throw CommandError.UnableToConvertArgument(argument, "\(self.self)")
@@ -68,13 +56,6 @@ extension UInt32: CommandArgumentConvertible { }
 extension UInt64: CommandArgumentConvertible { }
 
 extension BinaryFloatingPoint {
-    public static func resolveArgument(_ argument: String) throws -> Self {
-        guard let number = Double(argument) else {
-            throw CommandError.UnableToConvertArgument(argument, "\(self.self)")
-        }
-        return Self(number)
-    }
-    
     public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> Self {
         guard let number = Double(argument) else {
             throw CommandError.UnableToConvertArgument(argument, "\(self.self)")
@@ -88,13 +69,6 @@ extension Float: CommandArgumentConvertible { }
 extension Double: CommandArgumentConvertible { }
 
 extension UUID: CommandArgumentConvertible {
-    public static func resolveArgument(_ argument: String) throws -> UUID {
-        guard let uuid = UUID(uuidString: argument) else {
-            throw CommandError.UnableToConvertArgument(argument, "\(self.self)")
-        }
-        return uuid
-    }
-    
     public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> UUID {
         guard let uuid = UUID(uuidString: argument) else {
             throw CommandError.UnableToConvertArgument(argument, "\(self.self)")
@@ -103,28 +77,28 @@ extension UUID: CommandArgumentConvertible {
     }
 }
 
-//extension Array: CommandArgumentConvertible where Element: CommandArgumentConvertible {
-//    public typealias ResolvedArgument = [Element.ResolvedArgument]
-//    
-//    public static var typedName: String {
-//        return "\(Element.typedName)"
-//    }
-//    
-//    public static func argument(named name: String, argType: CommandArgumentType = .required) throws -> CommandArgument {
-//        let argType: CommandArgumentType = argType.optional ? .optionalConsume : .requiredConsume
-//        return CommandArgument(componentType: self.typedName, componentName: name, type: argType)
-//    }
-//    
-//    public static var canConsume: Bool {
-//        return true
-//    }
-//    
-//    public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> ResolvedArgument {
-//        let args = argument.split(separator: " ").map(String.init)
-//        var arr: ResolvedArgument = []
-//        try args.forEach {
-//            try arr.append(Element.resolveArgument($0, on: event))
-//        }
-//        return arr
-//    }
-//}
+extension Array: CommandArgumentConvertible where Element: CommandArgumentConvertible {
+    public typealias ResolvedArgument = [Element.ResolvedArgument]
+    
+    public static var typedName: String {
+        return "\(Element.typedName)"
+    }
+    
+    public static func argument(named name: String, argType: CommandArgumentType = .required) throws -> CommandArgument {
+        let argType: CommandArgumentType = argType.optional ? .optionalConsume : .requiredConsume
+        return CommandArgument(componentType: self.typedName, componentName: name, type: argType)
+    }
+    
+    public static var canConsume: Bool {
+        return true
+    }
+    
+    public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> ResolvedArgument {
+        let args = argument.split(separator: " ").map(String.init)
+        var arr: ResolvedArgument = []
+        try args.forEach {
+            try arr.append(Element.resolveArgument($0, on: event))
+        }
+        return arr
+    }
+}

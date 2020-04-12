@@ -1,3 +1,10 @@
+fileprivate extension Messageable {
+    func error(_ message: String) {
+        let msg = "<:redtick:502702620595453952> " + message
+        self.reply(msg)
+    }
+}
+
 extension SwiftHooks {
     func handleMessage(_ message: Messageable) {
         let foundCommands = self.findCommands(for: message)
@@ -8,15 +15,15 @@ extension SwiftHooks {
             do {
                 try command.invoke(on: event, using: self)
             } catch CommandError.ArgumentNotFound(let arg) {
-                event.message.reply("Missing argument \(arg)!")
+                event.message.error("Missing argument: \(arg)")
             } catch CommandError.ArgumentCanNotConsume {
-                event.message.reply("Too many arguments!")
+                event.message.error("Too many arguments!")
             } catch CommandError.InvalidPermissions {
-                event.message.reply("Invalid permissions!")
+                event.message.error("Invalid permissions!")
             } catch CommandError.UnableToConvertArgument(let arg, let type) {
-                event.message.reply("Error converting \(arg) to \(type)")
+                event.message.error("Error converting `\(arg)` to `\(type)`")
             } catch {
-                event.message.reply("Something went wrong!")
+                event.message.error("Something went wrong!")
                 self.logger.error("\(error.localizedDescription)")
             }
         }

@@ -22,11 +22,11 @@ public extension ExecutableCommand {
     var trigger: String { name }
     
     var help: String {
-        [group, name, readableArguments].compactMap { $0 }.joined(separator: " ")
+        [group, name, readableArguments].compactMap { $0 }.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
     var fullTrigger: String {
-        [group, name].compactMap { $0 }.joined(separator: " ")
+        [group, trigger].compactMap { $0 }.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
     func alias(_ string: String) -> Self {
@@ -50,3 +50,10 @@ public extension ExecutableCommand {
     }
 }
 
+internal extension Array {
+    static func + (_ lhs: Self, _ rhs: Element) -> Self {
+        var new = lhs
+        new.append(rhs)
+        return new
+    }
+}
