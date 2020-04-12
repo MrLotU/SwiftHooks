@@ -9,11 +9,8 @@ extension HookID {
 }
 
 final class TestHook: Hook {
-    
     struct _Options: HookOptions { }
     typealias Options = _Options
-    
-    func boot(on elg: EventLoopGroup) throws { }
     
     var closures: [TestEvent: [EventClosure]] = [:]
     
@@ -23,37 +20,43 @@ final class TestHook: Hook {
     
     static let id: HookID = .test
     
-    let translator: EventTranslator.Type = Translator.self
-    
-    class Translator: EventTranslator {
-        static func translate<E>(_ event: E) -> GlobalEvent? where E : EventType {
-            guard let event = event as? TestEvent else { return nil }
-            switch event {
-            case ._messageCreate: return ._messageCreate
-            default: return nil
-            }
-        }
-        
-        static func decodeConcreteType<T>(for event: GlobalEvent, with data: Data, as t: T.Type) -> T? {
-            switch event {
-            case ._messageCreate: return TestMessage(data) as? T
-            }
-        }
+    init(_ options: _Options, _ elg: EventLoopGroup) {
+        self.eventLoopGroup = elg
     }
-    
-    init(_ options: _Options, hooks: SwiftHooks?) {
+
+    func boot(hooks: SwiftHooks?) throws {
         self.hooks = hooks
     }
+
+    var eventLoopGroup: EventLoopGroup
+
+    func translate<E>(_ event: E) -> GlobalEvent? where E : EventType {
+        guard let event = event as? TestEvent else { return nil }
+        switch event {
+        case ._messageCreate: return ._messageCreate
+        default: return nil
+        }
+    }
+
+    func decodeConcreteType<T>(for event: GlobalEvent, with data: Data, as t: T.Type) -> T? {
+        switch event {
+        case ._messageCreate: return TestMessage.create(from: data, on: self) as? T
+        }
+    }
     
-    func listen<T, I>(for event: T, handler: @escaping EventHandler<I>) where T : _Event, I == T.ContentType {
-        guard let event = event as? _TestEvent<TestEvent, I> else { return }
+    func listen<T, I, D>(for event: T, handler: @escaping EventHandler<D, I>) where T : _Event, I == T.ContentType, T.D == D {
+        guard let event = event as? _TestEvent<I> else { return }
         var closures = self.closures[event, default: []]
         closures.append { (data) in
-            guard let object = I.init(data) else {
+            guard let object = I.create(from: data, on: self) else {
                 SwiftHooks.logger.debug("Unable to extract \(I.self) from data.")
                 return
             }
-            try handler(object)
+            guard let d = D.init(self) else {
+                SwiftHooks.logger.debug("Unable to wrap \(I.self) in \(D.self) dispatch.")
+                return
+            }
+            try handler(d, object)
         }
         self.closures[event] = closures
     }
@@ -74,7 +77,18 @@ final class TestHook: Hook {
     }
 }
 
-struct _TestEvent<E: EventType, ContentType: PayloadType>: _Event {
+struct TestDispatch: EventDispatch {
+    var eventLoop: EventLoop
+    
+    init?(_ h: _Hook) {
+        guard let h = h as? TestHook else { return nil }
+        self.eventLoop = h.eventLoopGroup.next()
+    }
+}
+
+struct _TestEvent<ContentType: PayloadType>: _Event {
+    typealias E = TestEvent
+    typealias D = TestDispatch
     public let event: E
     public init(_ e: E, _ t: ContentType.Type) {
         self.event = e
@@ -101,18 +115,25 @@ struct TestChannel: Channelable {
 }
 
 struct TestUser: Userable {
-    public var id: IDable { return "" }
-    public var mention: String { return "" }
+    var mention: String { "" }
     
-    init() { }
+    var identifier: String? { nil }
 }
 
 struct TestMessage: Messageable {
+    var gChannel: Channelable { fatalError() }
+    
+    var gAuthor: Userable { fatalError() }
+    
     public var channel: Channelable { _channel }
     public var _channel: TestChannel
     public var content: String
     public var author: Userable { _author }
     public var _author: TestUser
+    
+    static func create(from data: Data, on _: _Hook) -> TestMessage? {
+        return TestMessage(data)
+    }
     
     public init?(_ data: Data) {
         self._author = TestUser()
