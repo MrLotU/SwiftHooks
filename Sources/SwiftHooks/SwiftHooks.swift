@@ -10,8 +10,8 @@ public final class SwiftHooks {
     
     public var hooks: [_Hook]
     public internal(set) var globalListeners: [GlobalEvent: [GlobalEventClosure]]
-    public internal(set) var commands: [Command]
-    public internal(set) var plugins: [Plugin]
+    public internal(set) var commands: [_ExecutableCommand]
+    public internal(set) var plugins: [_Plugin]
     
     public static let decoder = JSONDecoder()
     public static let encoder = JSONEncoder()

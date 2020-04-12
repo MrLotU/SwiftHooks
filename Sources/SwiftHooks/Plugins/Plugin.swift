@@ -1,32 +1,19 @@
-public protocol Plugin { }
+public protocol _Plugin { }
 
-extension Plugin {
-    var commands: [Command] {
-        return Mirror(reflecting: self)
-            .children
-            .compactMap { child in
-                if let value = child.value as? Command {
-                    return value
-                }
-                return nil
-            }
+public protocol Plugin: _Plugin {
+    associatedtype C: Commands
+    associatedtype L: EventListeners
+    
+    var commands: Self.C { get }
+    var listeners: Self.L { get }
+}
+
+public extension Plugin {
+    var commands: some Commands {
+        NoCommands()
     }
     
-    func registerListeners(to h: _Hook) {
-        listeners.forEach { listener in
-                listener.register(to: h)
-        }
-    }
-    
-    func registerListeners(to h: SwiftHooks) {
-        listeners.forEach { listener in
-                listener.register(to: h)
-        }
-    }
-    
-    var listeners: [_Listener] {
-        return Mirror(reflecting: self)
-            .children
-            .compactMap { $0.value as? _Listener }
+    var listeners: some EventListeners {
+        NoListeners()
     }
 }

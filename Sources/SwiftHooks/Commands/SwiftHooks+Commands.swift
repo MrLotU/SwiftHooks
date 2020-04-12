@@ -22,7 +22,7 @@ extension SwiftHooks {
         }
     }
     
-    func findCommands(for message: Messageable) -> [Command] {
+    func findCommands(for message: Messageable) -> [_ExecutableCommand] {
         return self.commands.compactMap { return message.content.starts(with: "!" + $0.fullTrigger) ? $0 : nil }
     }
 }
@@ -42,7 +42,7 @@ public struct CommandEvent {
     public let message: Messageable
     public let name: String
     
-    public init(hooks: SwiftHooks, cmd: Command, msg: Messageable) {
+    public init(hooks: SwiftHooks, cmd: _ExecutableCommand, msg: Messageable) {
         self.hooks = hooks
         self.user = msg.gAuthor
         self.message = msg
