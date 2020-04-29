@@ -1,18 +1,16 @@
-![SwiftHooks_Full_Dark](https://user-images.githubusercontent.com/18392003/80610769-08499e00-8a3a-11ea-830e-ad1ab4552164.png)
+<p align="center">
+    <img src="https://user-images.githubusercontent.com/18392003/80610769-08499e00-8a3a-11ea-830e-ad1ab4552164.png"
+    width=80%
+    alt="SwiftHooks">
+</p>
 
 <p align="center">
-	<!-- <a href="https://docs.vapor.codes/4.0/">
-        <img src="http://img.shields.io/badge/read_the-docs-2196f3.svg" alt="Documentation">
-    </a> -->
-    <!-- <a href="https://discord.gg/vapor">
-        <img src="https://img.shields.io/discord/431917998102675485.svg" alt="Team Chat">
-    </a> -->
     <a href="LICENSE">
         <img src="https://img.shields.io/badge/license-MIT-brightgreen.svg" alt="MIT License">
     </a>
-    <!-- <a href="https://github.com/vapor/vapor/actions">
-        <img src="https://github.com/vapor/vapor/workflows/test/badge.svg" alt="Continuous Integration">
-    </a> -->
+    <a href="https://github.com/MrLotU/SwiftHooks/actions">
+        <img src="https://github.com/MrLotU/SwiftHooks/workflows/test/badge.svg" alt="Continuous Integration">
+    </a>
     <a href="https://swift.org">
         <img src="https://img.shields.io/badge/swift-5.2-brightgreen.svg" alt="Swift 5.2">
     </a>
