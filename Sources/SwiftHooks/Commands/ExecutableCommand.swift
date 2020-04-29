@@ -7,6 +7,7 @@ public protocol _ExecutableCommand: Commands {
     var readableArguments: String? { get }
     var fullTrigger: String { get }
     
+    func validate() throws
     func invoke(on event: CommandEvent, using hooks: SwiftHooks) throws
 }
 
@@ -47,6 +48,12 @@ public extension ExecutableCommand {
 
     func executables() -> [_ExecutableCommand] {
         return [self]
+    }
+}
+
+extension Array where Element == _ExecutableCommand {
+    func validate() throws {
+        try self.forEach { try $0.validate() }
     }
 }
 

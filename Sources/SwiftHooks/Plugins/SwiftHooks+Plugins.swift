@@ -1,7 +1,9 @@
 extension SwiftHooks {
-    public func register<P: Plugin>(_ plugin: P) {
+    public func register<P: Plugin>(_ plugin: P) throws {
         self.plugins.append(plugin)
-        self.commands.append(contentsOf: plugin.commands.executables())
+        let executables = plugin.commands.executables()
+        try executables.validate()
+        self.commands.append(contentsOf: executables)
         plugin.listeners.register(to: self)
     }
 }

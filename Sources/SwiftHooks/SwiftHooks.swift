@@ -7,8 +7,9 @@ public final class SwiftHooks {
     public private(set) var didShutdown: Bool
     private var isBooted: Bool
     private var running: EventLoopPromise<Void>?
+    public let config: SwiftHooksConfig
     
-    public var hooks: [_Hook]
+    public internal(set) var hooks: [_Hook]
     public internal(set) var globalListeners: [GlobalEvent: [GlobalEventClosure]]
     public internal(set) var commands: [_ExecutableCommand]
     public internal(set) var plugins: [_Plugin]
@@ -16,7 +17,7 @@ public final class SwiftHooks {
     public static let decoder = JSONDecoder()
     public static let encoder = JSONEncoder()
     
-    public init(eventLoopGroup: EventLoopGroup? = nil) {
+    public init(eventLoopGroup: EventLoopGroup? = nil, config: SwiftHooksConfig = .init()) {
         if let elg = eventLoopGroup {
             self.eventLoopGroup = elg
         } else {
@@ -29,6 +30,7 @@ public final class SwiftHooks {
         self.globalListeners = [:]
         self.commands = []
         self.plugins = []
+        self.config = config
     }
     
     public func run() throws {

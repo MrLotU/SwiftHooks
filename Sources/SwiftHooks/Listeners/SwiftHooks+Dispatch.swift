@@ -22,7 +22,7 @@ extension SwiftHooks {
     
     private func handleInternals(_ event: GlobalEvent, with raw: Data, from h: _Hook) {
         if event == ._messageCreate, let m = h.decodeConcreteType(for: event, with: raw, as: Messageable.self) {
-            self.handleMessage(m)
+            self.handleMessage(m, from: h)
         }
     }
 }

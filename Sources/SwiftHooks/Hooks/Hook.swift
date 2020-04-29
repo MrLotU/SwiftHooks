@@ -35,6 +35,10 @@ public extension _Hook {
     func boot() throws {
         try self.boot(hooks: nil)
     }
+    
+    var highlightFormatting: String? {
+        return nil
+    }
 }
 
 public protocol HookOptions { }

@@ -29,14 +29,18 @@ public struct Command: ExecutableCommand {
         self.closure = { _, _ in }
     }
 
-    public func arg<A>(_ t: A.Type, named n: String, _ type: CommandArgumentType = .required) -> OneArgCommand<A> {
+    public func validate() throws { }
+    
+    public func arg<A>(_ t: A.Type, named n: String) -> OneArgCommand<A> {
+        let x = GenericCommandArgument<A>(componentType: A.typedName, componentName: n)
+        print(x.description, x.isOptional ? "Optional" : "Non optional", x.isConsuming ? "Consuming" : "Non consuming")
         return OneArgCommand<A>(
             name: name,
             group: group,
             alias: alias,
             permissionChecks: permissionChecks,
             closure: { _, _, _ in },
-            arg: CommandArgument(componentType: A.typedName, componentName: n, type: type)
+            arg: x
         )
     }
 }
@@ -44,13 +48,12 @@ public struct Command: ExecutableCommand {
 fileprivate extension ExecutableCommand {
     func getArg<T>(_ t: T.Type = T.self, _ index: Int, for arg: CommandArgument, on event: CommandEvent) throws -> T.ResolvedArgument where T: CommandArgumentConvertible {
         func parse(_ s: String) throws -> T.ResolvedArgument {
-            if !arg.type.optional && s.isEmpty {
+            if !arg.isOptional && s.isEmpty {
                 throw CommandError.ArgumentNotFound(name)
             }
             return try T.resolveArgument(s, on: event)
         }
-        if arg.type.consumes {
-            guard T.canConsume else { throw CommandError.ArgumentCanNotConsume }
+        if arg.isConsuming {
             let s = event.args[index...].joined(separator: " ")
             return try parse(s)
         }
@@ -86,12 +89,14 @@ public struct OneArgCommand<A>: ExecutableCommand where A: CommandArgumentConver
         self.arg = arg
     }
     
+    public func validate() throws { }
+    
     public func invoke(on event: CommandEvent, using hooks: SwiftHooks) throws {
         let a = try getArg(A.self, 0, for: arg, on: event)
         try closure(hooks, event, a)
     }
         
-    public func arg<B>(_ t: B.Type, named: String, _ type: CommandArgumentType = .required) -> TwoArgCommand<A, B> {
+    public func arg<B>(_ t: B.Type, named: String) -> TwoArgCommand<A, B> {
         return TwoArgCommand<A, B>(
             name: name,
             group: group,
@@ -99,7 +104,7 @@ public struct OneArgCommand<A>: ExecutableCommand where A: CommandArgumentConver
             permissionChecks: permissionChecks,
             closure: { _, _, _, _ in },
             argOne: arg,
-            argTwo: .init(componentType: B.typedName, componentName: named, type: type)
+            argTwo: GenericCommandArgument<B>(componentType: B.typedName, componentName: named)
         )
     }
 }
@@ -130,6 +135,12 @@ public struct TwoArgCommand<A, B>: ExecutableCommand where A: CommandArgumentCon
     
     let argOne: CommandArgument
     let argTwo: CommandArgument
+    
+    public func validate() throws {
+        if argOne.isConsuming {
+            throw CommandError.ConsumingArgumentIsNotLast(argOne.componentName)
+        }
+    }
 
     public func invoke(on event: CommandEvent, using hooks: SwiftHooks) throws {
         let a = try getArg(A.self, 0, for: argOne, on: event)
@@ -137,7 +148,7 @@ public struct TwoArgCommand<A, B>: ExecutableCommand where A: CommandArgumentCon
         try self.closure(hooks, event, a, b)
     }
     
-    public func arg<C>(_ t: C.Type, named: String, _ type: CommandArgumentType = .required) -> ThreeArgCommand<A, B, C> {
+    public func arg<C>(_ t: C.Type, named: String) -> ThreeArgCommand<A, B, C> {
         return ThreeArgCommand<A, B, C>(
             name: name,
             group: group,
@@ -146,7 +157,7 @@ public struct TwoArgCommand<A, B>: ExecutableCommand where A: CommandArgumentCon
             closure: { _, _, _, _, _ in },
             argOne: argOne,
             argTwo: argTwo,
-            argThree: CommandArgument(componentType: C.typedName, componentName: named, type: type)
+            argThree: GenericCommandArgument<C>(componentType: C.typedName, componentName: named)
         )
     }
 }
@@ -179,6 +190,15 @@ public struct ThreeArgCommand<A, B, C>: ExecutableCommand where A: CommandArgume
     let argOne: CommandArgument
     let argTwo: CommandArgument
     let argThree: CommandArgument
+    
+    public func validate() throws {
+        if argOne.isConsuming {
+            throw CommandError.ConsumingArgumentIsNotLast(argOne.componentName)
+        }
+        if argTwo.isConsuming {
+            throw CommandError.ConsumingArgumentIsNotLast(argTwo.componentName)
+        }
+    }
 
     public func invoke(on event: CommandEvent, using hooks: SwiftHooks) throws {
         let a = try getArg(A.self, 0, for: argOne, on: event)
@@ -187,14 +207,14 @@ public struct ThreeArgCommand<A, B, C>: ExecutableCommand where A: CommandArgume
         try self.closure(hooks, event, a, b, c)
     }
     
-    public func arg<T>(_ t: T.Type, named: String, _ type: CommandArgumentType = .required) -> ArrayArgCommand where T: CommandArgumentConvertible {
+    public func arg<T>(_ t: T.Type, named: String) -> ArrayArgCommand where T: CommandArgumentConvertible {
         return ArrayArgCommand(
             name: name,
             group: group,
             alias: alias,
             permissionChecks: permissionChecks,
             closure: { _, _, _ in },
-            arguments: [argOne, argTwo, argThree, CommandArgument(componentType: T.typedName, componentName: named, type: type)]
+            arguments: [argOne, argTwo, argThree, GenericCommandArgument<T>(componentType: T.typedName, componentName: named)]
         )
     }
 }
@@ -206,6 +226,10 @@ public struct ArrayArgCommand: ExecutableCommand {
     public let permissionChecks: [CommandPermissionChecker]
     public let closure: (SwiftHooks, CommandEvent, Arguments) throws -> Void
     public let arguments: [CommandArgument]
+    
+    public var readableArguments: String? {
+        return self.arguments.map(\.description).joined(separator: " ")
+    }
     
     public func copyWith(name: String, group: String?, alias: [String], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) -> ArrayArgCommand {
         return .init(name: name, group: group, alias: alias, permissionChecks: permissionChecks, closure: closure, arguments: arguments)
@@ -220,22 +244,26 @@ public struct ArrayArgCommand: ExecutableCommand {
         self.arguments = arguments
     }
     
+    public func validate() throws {
+        try self.arguments.enumerated().forEach { (index, item) in
+            if item.isConsuming && !(index == arguments.endIndex - 1) {
+                throw CommandError.ConsumingArgumentIsNotLast(item.componentName)
+            }
+        }
+    }
+    
     public func invoke(on event: CommandEvent, using hooks: SwiftHooks) throws {
         try closure(hooks, event, Arguments(arguments: arguments))
     }
     
-    public var readableArguments: String? {
-        return self.arguments.map(\.description).joined(separator: " ")
-    }
-    
-    public func arg<T>(_ t: T.Type, named: String, _ type: CommandArgumentType = .required) -> ArrayArgCommand where T: CommandArgumentConvertible {
+    public func arg<T>(_ t: T.Type, named: String) -> ArrayArgCommand where T: CommandArgumentConvertible {
         return ArrayArgCommand(
             name: name,
             group: group,
             alias: alias,
             permissionChecks: permissionChecks,
             closure: { _, _, _ in },
-            arguments: arguments + CommandArgument(componentType: T.typedName, componentName: named, type: type)
+            arguments: arguments + GenericCommandArgument<T>(componentType: T.typedName, componentName: named)
         )
     }
 }
@@ -251,17 +279,17 @@ public struct Arguments {
         guard let foundArg = self.arguments.first(where: {
             $0.componentType == arg.typedName &&
             $0.componentName == name
-        }), let index = arguments.firstIndex(of: foundArg) else {
+        }), let index = arguments.firstIndex(where: { $0 == foundArg }) else {
             throw CommandError.ArgumentNotFound(name)
         }
         func parse(_ s: String) throws -> A.ResolvedArgument {
-            if !foundArg.type.optional && s.isEmpty {
+            if !foundArg.isOptional && s.isEmpty {
                 throw CommandError.ArgumentNotFound(name)
             }
             return try A.resolveArgument(s, on: event)
         }
-        if foundArg.type.consumes {
-            guard A.canConsume else { throw CommandError.ArgumentCanNotConsume }
+        if foundArg.isConsuming {
+//            guard A.canConsume else { throw CommandError.ArgumentCanNotConsume(foundArg.componentName) }
             let string = event.args[index...].joined(separator: " ")
             return try parse(string)
         }
@@ -269,5 +297,11 @@ public struct Arguments {
             throw CommandError.ArgumentNotFound(name)
         }
         return try parse(string)
+    }
+}
+
+fileprivate extension Array {
+    subscript(safe index: Int) -> Element? {
+        return (index >= 0 && index < count) ? self[Int(index)] : nil
     }
 }

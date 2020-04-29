@@ -4,24 +4,54 @@ public protocol CommandArgumentConvertible {
     associatedtype ResolvedArgument = Self
     
     static var typedName: String { get }
-    static var canConsume: Bool { get }
     static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> ResolvedArgument
+}
+
+public protocol ConsumingCommandArgumentConvertible: CommandArgumentConvertible, AnyConsuming { }
+
+public protocol CommandArgument {
+    var isOptional: Bool { get }
+    var isConsuming: Bool { get }
+    var componentType: String { get }
+    var componentName: String { get }
+}
+
+func == (_ lhs: CommandArgument, _ rhs: CommandArgument) -> Bool {
+    return lhs.description == rhs.description
+}
+
+extension CommandArgument {
+    public var description: String {
+        let compType = self.isConsuming ? "\(componentType)..." : componentType
+        if self.isOptional {
+            return "[\(componentName):\(compType)]"
+        } else {
+            return "<\(componentName):\(compType)>"
+        }
+    }
+}
+
+
+public protocol AnyConsuming {}
+protocol AnyOptional {}
+extension Optional: AnyOptional {}
+
+struct GenericCommandArgument<T: CommandArgumentConvertible>: CommandArgument {
+    let componentType: String
+    let componentName: String
+    
+    var isOptional: Bool {
+        T.self is AnyOptional.Type
+    }
+    
+    var isConsuming: Bool {
+        T.self is AnyConsuming.Type
+    }
 }
 
 extension CommandArgumentConvertible {
     public static var typedName: String {
         return "\(Self.self)"
-    }
-    
-    public static var canConsume: Bool {
-        return false
-    }
-    
-    public static func argument(named name: String, _ argType: CommandArgumentType = .required) throws -> CommandArgument {
-        if argType.consumes && !self.canConsume {
-            throw CommandError.ArgumentCanNotConsume
-        }
-        return CommandArgument(componentType: self.typedName, componentName: name, type: argType)
     }
 }
 
@@ -29,9 +59,17 @@ extension String: CommandArgumentConvertible {
     public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> String {
         return argument
     }
-    
-    public static var canConsume: Bool {
-        return true
+}
+
+public extension String {
+    struct Consuming: ConsumingCommandArgumentConvertible {
+        public static var typedName: String {
+            String.typedName
+        }
+        public typealias ResolvedArgument = String
+        public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> String {
+            return argument
+        }
     }
 }
 
@@ -77,28 +115,28 @@ extension UUID: CommandArgumentConvertible {
     }
 }
 
-extension Array: CommandArgumentConvertible where Element: CommandArgumentConvertible {
+extension Array: ConsumingCommandArgumentConvertible, CommandArgumentConvertible, AnyConsuming where Element: CommandArgumentConvertible {
     public typealias ResolvedArgument = [Element.ResolvedArgument]
     
     public static var typedName: String {
         return "\(Element.typedName)"
     }
     
-    public static func argument(named name: String, argType: CommandArgumentType = .required) throws -> CommandArgument {
-        let argType: CommandArgumentType = argType.optional ? .optionalConsume : .requiredConsume
-        return CommandArgument(componentType: self.typedName, componentName: name, type: argType)
-    }
-    
-    public static var canConsume: Bool {
-        return true
-    }
-    
     public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> ResolvedArgument {
         let args = argument.split(separator: " ").map(String.init)
-        var arr: ResolvedArgument = []
-        try args.forEach {
-            try arr.append(Element.resolveArgument($0, on: event))
-        }
-        return arr
+        return try args.reduce(into: [], { $0.append(try Element.resolveArgument($1, on: event)) })
     }
 }
+
+extension Optional: CommandArgumentConvertible where Wrapped: CommandArgumentConvertible {
+    public static var typedName: String {
+        Wrapped.typedName
+    }
+    public typealias ResolvedArgument = Wrapped.ResolvedArgument?
+    public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> Wrapped.ResolvedArgument? {
+        guard !argument.isEmpty else { return nil }
+        return try? Wrapped.resolveArgument(argument, on: event)
+    }
+}
+
+extension Optional: ConsumingCommandArgumentConvertible, AnyConsuming where Wrapped: ConsumingCommandArgumentConvertible { }
