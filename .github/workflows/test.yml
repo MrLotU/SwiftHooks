@@ -1,6 +1,8 @@
 name: test
 on:
-- pull_request
+  push:
+    branches: [ master ]
+  pull_request:
 jobs:
   swifthooks_macos:
     runs-on: macos-latest
