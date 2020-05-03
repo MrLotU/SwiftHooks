@@ -2,6 +2,11 @@ import Foundation
 import NIO
 import Logging
 
+/// Main SwiftHooks class. Acts as global controller.
+///
+///     let swiftHooks = SwiftHooks()
+///
+/// Hooks and Plugins are both connected to the main SwiftHooks class.
 public final class SwiftHooks {
     public let eventLoopGroup: EventLoopGroup
     public private(set) var didShutdown: Bool
@@ -17,7 +22,12 @@ public final class SwiftHooks {
     public static let decoder = JSONDecoder()
     public static let encoder = JSONEncoder()
     
-    public init(eventLoopGroup: EventLoopGroup? = nil, config: SwiftHooksConfig = .init()) {
+    /// Create a new `SwiftHooks` instance
+    ///
+    /// - parameters:
+    ///     - eventLoopGroup: EventLoopGroup to run SwiftHooks on. If not passed in a new one will be created.
+    ///     - config: Configuration to use. Defaults to `SwiftHooksConfig.default`
+    public init(eventLoopGroup: EventLoopGroup? = nil, config: SwiftHooksConfig = .default) {
         if let elg = eventLoopGroup {
             self.eventLoopGroup = elg
         } else {
@@ -33,6 +43,7 @@ public final class SwiftHooks {
         self.config = config
     }
     
+    /// Run the SwiftHooks process. Will boot all connected `Hook`s and block forever.
     public func run() throws {
         defer { self.shutdown() }
         if running == nil {
@@ -62,6 +73,10 @@ public final class SwiftHooks {
         self.logger.trace("Shutdown complete.")
     }
 
+    /// Connect a new `_Hook` to the SwiftHooks system.
+    ///
+    /// - parameters:
+    ///     - hook: Instance of `_Hook` or `Hook`
     public func hook(_ hook: _Hook) throws {
         self.hooks.append(hook)
     }
@@ -75,6 +90,7 @@ public final class SwiftHooks {
 }
 
 extension SwiftHooks {
+    /// Global SwiftHooks logger
     public static var logger: Logger {
         var l = Logger(label: "SwiftHooks.Global")
         l.logLevel = .trace

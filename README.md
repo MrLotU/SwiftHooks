@@ -90,7 +90,7 @@ class MyPlugin: Plugin {
                     """)
             }
 
-            GlobalListener(GlobalEvent.messageCreate) { event, message in
+            GlobalListener(Global.messageCreate) { event, message in
                 print("Message: \(message.content)")
             }
         }

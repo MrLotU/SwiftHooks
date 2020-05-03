@@ -35,9 +35,12 @@ public struct GlobalDispatch: EventDispatch {
     public let eventLoop: EventLoop
 }
 
+public typealias Global = GlobalEvent
+
 public enum GlobalEvent: EventType {
     case _messageCreate
     
+    /// Emitted when a new message comes in.
     public static let messageCreate = _GlobalEvent(GlobalEvent._messageCreate, Messageable.self)
 }
 

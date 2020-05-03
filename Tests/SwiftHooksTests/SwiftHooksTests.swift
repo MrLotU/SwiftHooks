@@ -9,7 +9,7 @@ class MyPlugin: Plugin {
             Listener(TestEvent.messageCreate) { _, event in
                 self.messages.append(event.content)
             }
-            GlobalListener(GlobalEvent.messageCreate) { _, event in
+            GlobalListener(Global.messageCreate) { _, event in
                 self.messages.append(event.content)
             }
         }

@@ -31,10 +31,23 @@ extension SwiftHooks {
     }
 }
 
+/// Errors thrown from command invocations or pre-checking.
 public enum CommandError: Error {
+    /// User executing this command does not have the required permissions.
+    ///
+    /// Thrown from `CommandPermissionChecker`
     case InvalidPermissions
+    /// Development error. Consuming arguments should always appear last in the argument chain.
+    ///
+    /// Thrown at `SwiftHooks.register(_ plugin:)` time.
     case ConsumingArgumentIsNotLast(String)
+    /// Invalid argument passed on command invocation.
+    ///
+    /// Thrown from argument decoding.
     case UnableToConvertArgument(String, String)
+    /// Invalid or too few arguments passed on command invocation.
+    ///
+    /// Thrown from argument decoding
     case ArgumentNotFound(String)
     
     public var localizedDescription: String {

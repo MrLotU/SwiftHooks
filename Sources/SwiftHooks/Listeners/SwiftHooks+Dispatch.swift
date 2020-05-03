@@ -5,6 +5,12 @@ public typealias EventClosure = (Data) throws -> Void
 public typealias GlobalEventClosure = (Data, _Hook) throws -> Void
 
 extension SwiftHooks {
+    /// Dispatch an event from a `_Hook` into the central `SwiftHooks` system.
+    ///
+    /// - parameters:
+    ///     - e: Event to dispatch
+    ///     - raw: Raw bytes containing the event.
+    ///     - h: Hook this event originated from.
     public func dispatchEvent<E>(_ e: E, with raw: Data, from h: _Hook) where E: EventType {
         guard let event = h.translate(e) else { return }
         Counter(label: "global_events_dispatched", dimensions: [("hook", type(of: h).id.identifier), ("event", "\(event)")]).increment()
