@@ -108,7 +108,7 @@ struct Test: PayloadType {
 }
 
 struct TestChannel: Channelable {
-    public func send(_ msg: String) { }
+    public func send(_ msg: String) -> EventLoopFuture<Messageable> { fatalError() }
     public var mention: String { return "" }
     
     init() { }
@@ -141,7 +141,7 @@ struct TestMessage: Messageable {
         self.content = "!ping"
     }
     
-    public func reply(_ content: String) { }
-    public func edit(_ content: String) { }
+    public func reply(_ content: String) -> EventLoopFuture<Messageable> { fatalError() }
+    public func edit(_ content: String) -> EventLoopFuture<Messageable> { fatalError() }
     public func delete() { }
 }

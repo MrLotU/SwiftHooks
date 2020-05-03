@@ -25,7 +25,7 @@ final class SwiftHooksTests: XCTestCase {
         let testHook = TestHook(.init(), hooks.eventLoopGroup)
         try hooks.hook(testHook)
         let plugin = MyPlugin()
-        hooks.register(plugin)
+        try hooks.register(plugin)
                 
         try hooks.boot()
         
