@@ -143,5 +143,5 @@ struct TestMessage: Messageable {
     
     public func reply(_ content: String) -> EventLoopFuture<Messageable> { fatalError() }
     public func edit(_ content: String) -> EventLoopFuture<Messageable> { fatalError() }
-    public func delete() { }
+    public func delete() -> EventLoopFuture<Void> { fatalError() }
 }
