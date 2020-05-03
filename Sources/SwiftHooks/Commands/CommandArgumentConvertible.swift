@@ -5,6 +5,7 @@ public protocol CommandArgumentConvertible {
     
     static var typedName: String { get }
     static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> ResolvedArgument
+    static func resolveArgument(_ argument: String?, arg: CommandArgument, on event: CommandEvent) throws -> ResolvedArgument
 }
 
 public protocol ConsumingCommandArgumentConvertible: CommandArgumentConvertible, AnyConsuming { }
@@ -33,15 +34,21 @@ extension CommandArgument {
 
 
 public protocol AnyConsuming {}
-protocol AnyOptional {}
-extension Optional: AnyOptional {}
+protocol AnyOptionalType {
+    var isNil: Bool { get }
+    static func resolveNil() -> Any?
+}
+extension Optional: AnyOptionalType {
+    var isNil: Bool { self == nil }
+    static func resolveNil() -> Any? { return nil }
+}
 
 struct GenericCommandArgument<T: CommandArgumentConvertible>: CommandArgument {
     let componentType: String
     let componentName: String
     
     var isOptional: Bool {
-        T.self is AnyOptional.Type
+        T.self is AnyOptionalType.Type
     }
     
     var isConsuming: Bool {
@@ -52,6 +59,13 @@ struct GenericCommandArgument<T: CommandArgumentConvertible>: CommandArgument {
 extension CommandArgumentConvertible {
     public static var typedName: String {
         return "\(Self.self)"
+    }
+    
+    public static func resolveArgument(_ argument: String?, arg: CommandArgument, on event: CommandEvent) throws -> Self.ResolvedArgument {
+        guard let argument = argument else {
+            throw CommandError.ArgumentNotFound(arg.componentName)
+        }
+        return try self.resolveArgument(argument, on: event)
     }
 }
 
@@ -136,6 +150,14 @@ extension Optional: CommandArgumentConvertible where Wrapped: CommandArgumentCon
     public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> Wrapped.ResolvedArgument? {
         guard !argument.isEmpty else { return nil }
         return try? Wrapped.resolveArgument(argument, on: event)
+    }
+    
+    public static func resolveArgument(_ argument: String?, arg: CommandArgument, on event: CommandEvent) throws -> ResolvedArgument {
+        if let arg = argument {
+            return try self.resolveArgument(arg, on: event)
+        } else {
+            return nil
+        }
     }
 }
 

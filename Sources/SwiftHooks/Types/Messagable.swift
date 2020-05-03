@@ -18,8 +18,6 @@ public extension Messageable {
         switch error {
         case CommandError.ArgumentNotFound(let arg):
             self.reply("Missing argument: \(arg)\nUsage: \(command.help)")
-        case CommandError.ArgumentCanNotConsume:
-           self.reply("Too many arguments!\nUsage: \(command.help)")
         case CommandError.InvalidPermissions:
            self.reply("Invalid permissions!\nUsage: \(command.help)")
         case CommandError.UnableToConvertArgument(let arg, let type):

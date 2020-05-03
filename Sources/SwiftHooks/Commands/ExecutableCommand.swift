@@ -3,6 +3,7 @@ public protocol _ExecutableCommand: Commands {
     var name: String { get }
     var group: String? { get }
     var alias: [String] { get }
+    var hookWhitelist: [HookID] { get }
     var permissionChecks: [CommandPermissionChecker] { get }
     var readableArguments: String? { get }
     var fullTrigger: String { get }
@@ -15,7 +16,7 @@ public protocol ExecutableCommand: _ExecutableCommand {
     associatedtype Execute
     var closure: Execute { get }
     
-    func copyWith(name: String, group: String?, alias: [String], permissionChecks: [CommandPermissionChecker], closure: Execute) -> Self
+    func copyWith(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: Execute) -> Self
 }
 
 public extension ExecutableCommand {
@@ -30,20 +31,24 @@ public extension ExecutableCommand {
         [group, trigger].compactMap { $0 }.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
+    func onHook(_ hook: HookID) -> Self {
+        return self.copyWith(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist + hook, permissionChecks: permissionChecks, closure: closure)
+    }
+    
     func alias(_ string: String) -> Self {
-        return self.copyWith(name: name, group: group, alias: alias + string, permissionChecks: permissionChecks, closure: closure)
+        return self.copyWith(name: name, group: group, alias: alias + string, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure)
     }
     
     func check(_ c: CommandPermissionChecker) -> Self {
-        return self.copyWith(name: name, group: group, alias: alias, permissionChecks: permissionChecks + c, closure: closure)
+        return self.copyWith(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks + c, closure: closure)
     }
     
     func group(_ group: String) -> Self {
-        return self.copyWith(name: name, group: group, alias: alias, permissionChecks: permissionChecks, closure: closure)
+        return self.copyWith(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure)
     }
     
     func execute(_ c: Execute) -> Self {
-        return self.copyWith(name: name, group: group, alias: alias, permissionChecks: permissionChecks, closure: c)
+        return self.copyWith(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: c)
     }
 
     func executables() -> [_ExecutableCommand] {

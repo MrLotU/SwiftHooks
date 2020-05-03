@@ -1,17 +1,28 @@
+import Logging
+import Metrics
+
 extension SwiftHooks {
     func handleMessage(_ message: Messageable, from h: _Hook) {
-        guard config.commands.enabled else { return }
+        guard config.commands.enabled, message.content.starts(with: self.config.commands.prefix) else { return }
         let foundCommands = self.findCommands(for: message)
         
         foundCommands.forEach { (command) in
+            guard command.hookWhitelist.isEmpty || command.hookWhitelist.contains(h.id) else { return }
             let event = CommandEvent(hooks: self, cmd: command, msg: message, for: h)
             
             do {
-                try command.invoke(on: event, using: self)
+                event.logger.debug("Invoking command")
+                event.logger.trace("Full message: \(message.content)")
+                try Timer.measure(label: "command_duration", dimensions: [("command", command.fullTrigger)]) {
+                    try command.invoke(on: event, using: self)
+                }
+                event.logger.debug("Command succesfully invoked.")
             } catch let e {
                 event.message.error(e, on: command)
-                self.logger.error("\(e.localizedDescription)")
+                event.logger.error("\(e.localizedDescription)")
+                Counter(label: "command_failure", dimensions: [("command", command.fullTrigger)]).increment()
             }
+            Counter(label: "command_success", dimensions: [("command", command.fullTrigger)]).increment()
         }
     }
     
@@ -23,10 +34,21 @@ extension SwiftHooks {
 public enum CommandError: Error {
     case InvalidPermissions
     case ConsumingArgumentIsNotLast(String)
-    case ArgumentCanNotConsume(String)
     case UnableToConvertArgument(String, String)
     case ArgumentNotFound(String)
-    case CommandRedeclaration
+    
+    public var localizedDescription: String {
+         switch self {
+         case .ArgumentNotFound(let arg):
+            return "Missing argument: \(arg)"
+         case .InvalidPermissions:
+            return "Invalid permissions!"
+         case .UnableToConvertArgument(let arg, let type):
+            return "Error converting \(arg) to \(type)"
+         case .ConsumingArgumentIsNotLast(let arg):
+            return "Consuming argument \(arg) is not the last one in the argument chain."
+        }
+    }
 }
 
 public struct CommandEvent {
@@ -36,8 +58,10 @@ public struct CommandEvent {
     public let message: Messageable
     public let name: String
     public let hook: _Hook
+    public private(set) var logger: Logger
     
     public init(hooks: SwiftHooks, cmd: _ExecutableCommand, msg: Messageable, for h: _Hook) {
+        self.logger = Logger(label: "SwiftHooks.Command")
         self.hooks = hooks
         self.user = msg.gAuthor
         self.message = msg
@@ -50,5 +74,6 @@ public struct CommandEvent {
         self.name = name
         self.args = comps.map(String.init)
         self.hook = h
+        self.logger[metadataKey: "command"] = "\(cmd.fullTrigger)"
     }
 }

@@ -32,6 +32,10 @@ public protocol _Hook {
 }
 
 public extension _Hook {
+    var id: HookID {
+        type(of: self).id
+    }
+    
     func boot() throws {
         try self.boot(hooks: nil)
     }

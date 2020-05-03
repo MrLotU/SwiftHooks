@@ -1,22 +1,24 @@
 public struct Command: ExecutableCommand {
     public let name: String
     public let group: String?
-    public var alias: [String]
-    public var permissionChecks: [CommandPermissionChecker]
+    public let alias: [String]
+    public let hookWhitelist: [HookID]
+    public let permissionChecks: [CommandPermissionChecker]
     public let closure: (SwiftHooks, CommandEvent) throws -> Void
     
     public func invoke(on event: CommandEvent, using hooks: SwiftHooks) throws {
         try closure(hooks, event)
     }
     
-    public func copyWith(name: String, group: String?, alias: [String], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) -> Self {
-        return .init(name: name, group: group, alias: alias, permissionChecks: permissionChecks, closure: closure)
+    public func copyWith(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) -> Self {
+        return .init(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure)
     }
     
-    internal init(name: String, group: String?, alias: [String], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) {
+    internal init(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) {
         self.name = name
         self.group = group
         self.alias = alias
+        self.hookWhitelist = hookWhitelist
         self.permissionChecks = permissionChecks
         self.closure = closure
     }
@@ -25,6 +27,7 @@ public struct Command: ExecutableCommand {
         self.name = name
         self.group = nil
         self.alias = []
+        self.hookWhitelist = []
         self.permissionChecks = []
         self.closure = { _, _ in }
     }
@@ -33,11 +36,11 @@ public struct Command: ExecutableCommand {
     
     public func arg<A>(_ t: A.Type, named n: String) -> OneArgCommand<A> {
         let x = GenericCommandArgument<A>(componentType: A.typedName, componentName: n)
-        print(x.description, x.isOptional ? "Optional" : "Non optional", x.isConsuming ? "Consuming" : "Non consuming")
         return OneArgCommand<A>(
             name: name,
             group: group,
             alias: alias,
+            hookWhitelist: hookWhitelist,
             permissionChecks: permissionChecks,
             closure: { _, _, _ in },
             arg: x
@@ -46,12 +49,17 @@ public struct Command: ExecutableCommand {
 }
 
 fileprivate extension ExecutableCommand {
-    func getArg<T>(_ t: T.Type = T.self, _ index: Int, for arg: CommandArgument, on event: CommandEvent) throws -> T.ResolvedArgument where T: CommandArgumentConvertible {
+    func getArg<T>(_ t: T.Type = T.self, _ index: inout Int, for arg: CommandArgument, on event: CommandEvent) throws -> T.ResolvedArgument where T: CommandArgumentConvertible {
         func parse(_ s: String) throws -> T.ResolvedArgument {
             if !arg.isOptional && s.isEmpty {
                 throw CommandError.ArgumentNotFound(name)
             }
-            return try T.resolveArgument(s, on: event)
+            let t = try T.resolveArgument(s, on: event)
+            if (t as? AnyOptionalType)?.isNil ?? false {
+                return t
+            }
+            index += 1
+            return t
         }
         if arg.isConsuming {
             let s = event.args[index...].joined(separator: " ")
@@ -68,6 +76,7 @@ public struct OneArgCommand<A>: ExecutableCommand where A: CommandArgumentConver
     public let name: String
     public let group: String?
     public let alias: [String]
+    public let hookWhitelist: [HookID]
     public let permissionChecks: [CommandPermissionChecker]
     public let closure: (SwiftHooks, CommandEvent, A.ResolvedArgument) throws -> Void
     public var readableArguments: String? {
@@ -76,14 +85,15 @@ public struct OneArgCommand<A>: ExecutableCommand where A: CommandArgumentConver
     
     let arg: CommandArgument
     
-    public func copyWith(name: String, group: String?, alias: [String], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) -> Self {
-        return .init(name: name, group: group, alias: alias, permissionChecks: permissionChecks, closure: closure, arg: arg)
+    public func copyWith(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) -> Self {
+        return .init(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure, arg: arg)
     }
     
-    internal init(name: String, group: String?, alias: [String], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute, arg: CommandArgument) {
+    internal init(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute, arg: CommandArgument) {
         self.name = name
         self.group = group
         self.alias = alias
+        self.hookWhitelist = hookWhitelist
         self.permissionChecks = permissionChecks
         self.closure = closure
         self.arg = arg
@@ -92,7 +102,8 @@ public struct OneArgCommand<A>: ExecutableCommand where A: CommandArgumentConver
     public func validate() throws { }
     
     public func invoke(on event: CommandEvent, using hooks: SwiftHooks) throws {
-        let a = try getArg(A.self, 0, for: arg, on: event)
+        var idx = 0
+        let a = try getArg(A.self, &idx, for: arg, on: event)
         try closure(hooks, event, a)
     }
         
@@ -101,6 +112,7 @@ public struct OneArgCommand<A>: ExecutableCommand where A: CommandArgumentConver
             name: name,
             group: group,
             alias: alias,
+            hookWhitelist: hookWhitelist,
             permissionChecks: permissionChecks,
             closure: { _, _, _, _ in },
             argOne: arg,
@@ -113,20 +125,22 @@ public struct TwoArgCommand<A, B>: ExecutableCommand where A: CommandArgumentCon
     public let name: String
     public let group: String?
     public let alias: [String]
+    public let hookWhitelist: [HookID]
     public let permissionChecks: [CommandPermissionChecker]
     public let closure: (SwiftHooks, CommandEvent, A.ResolvedArgument, B.ResolvedArgument) throws -> Void
     public var readableArguments: String? {
         [argOne, argTwo].map(\.description).joined(separator: " ")
     }
     
-    public func copyWith(name: String, group: String?, alias: [String], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) -> Self {
-        return .init(name: name, group: group, alias: alias, permissionChecks: permissionChecks, closure: closure, argOne: argOne, argTwo: argTwo)
+    public func copyWith(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) -> Self {
+        return .init(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure, argOne: argOne, argTwo: argTwo)
     }
     
-    internal init(name: String, group: String?, alias: [String], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute, argOne: CommandArgument, argTwo: CommandArgument) {
+    internal init(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute, argOne: CommandArgument, argTwo: CommandArgument) {
         self.name = name
         self.group = group
         self.alias = alias
+        self.hookWhitelist = hookWhitelist
         self.permissionChecks = permissionChecks
         self.closure = closure
         self.argOne = argOne
@@ -143,8 +157,9 @@ public struct TwoArgCommand<A, B>: ExecutableCommand where A: CommandArgumentCon
     }
 
     public func invoke(on event: CommandEvent, using hooks: SwiftHooks) throws {
-        let a = try getArg(A.self, 0, for: argOne, on: event)
-        let b = try getArg(B.self, 1, for: argTwo, on: event)
+        var idx = 0
+        let a = try getArg(A.self, &idx, for: argOne, on: event)
+        let b = try getArg(B.self, &idx, for: argTwo, on: event)
         try self.closure(hooks, event, a, b)
     }
     
@@ -153,6 +168,7 @@ public struct TwoArgCommand<A, B>: ExecutableCommand where A: CommandArgumentCon
             name: name,
             group: group,
             alias: alias,
+            hookWhitelist: hookWhitelist,
             permissionChecks: permissionChecks,
             closure: { _, _, _, _, _ in },
             argOne: argOne,
@@ -166,20 +182,22 @@ public struct ThreeArgCommand<A, B, C>: ExecutableCommand where A: CommandArgume
     public let name: String
     public let group: String?
     public let alias: [String]
+    public let hookWhitelist: [HookID]
     public let permissionChecks: [CommandPermissionChecker]
     public let closure: (SwiftHooks, CommandEvent, A.ResolvedArgument, B.ResolvedArgument, C.ResolvedArgument) throws -> Void
     public var readableArguments: String? {
         [argOne, argTwo, argThree].map(\.description).joined(separator: " ")
     }
     
-    public func copyWith(name: String, group: String?, alias: [String], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) -> Self {
-        return .init(name: name, group: group, alias: alias, permissionChecks: permissionChecks, closure: closure, argOne: argOne, argTwo: argTwo, argThree: argThree)
+    public func copyWith(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) -> Self {
+        return .init(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure, argOne: argOne, argTwo: argTwo, argThree: argThree)
     }
     
-    internal init(name: String, group: String?, alias: [String], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute, argOne: CommandArgument, argTwo: CommandArgument, argThree: CommandArgument) {
+    internal init(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute, argOne: CommandArgument, argTwo: CommandArgument, argThree: CommandArgument) {
         self.name = name
         self.group = group
         self.alias = alias
+        self.hookWhitelist = hookWhitelist
         self.permissionChecks = permissionChecks
         self.closure = closure
         self.argOne = argOne
@@ -201,9 +219,10 @@ public struct ThreeArgCommand<A, B, C>: ExecutableCommand where A: CommandArgume
     }
 
     public func invoke(on event: CommandEvent, using hooks: SwiftHooks) throws {
-        let a = try getArg(A.self, 0, for: argOne, on: event)
-        let b = try getArg(B.self, 1, for: argTwo, on: event)
-        let c = try getArg(C.self, 2, for: argThree, on: event)
+        var idx = 0
+        let a = try getArg(A.self, &idx, for: argOne, on: event)
+        let b = try getArg(B.self, &idx, for: argTwo, on: event)
+        let c = try getArg(C.self, &idx, for: argThree, on: event)
         try self.closure(hooks, event, a, b, c)
     }
     
@@ -212,6 +231,7 @@ public struct ThreeArgCommand<A, B, C>: ExecutableCommand where A: CommandArgume
             name: name,
             group: group,
             alias: alias,
+            hookWhitelist: hookWhitelist,
             permissionChecks: permissionChecks,
             closure: { _, _, _ in },
             arguments: [argOne, argTwo, argThree, GenericCommandArgument<T>(componentType: T.typedName, componentName: named)]
@@ -223,6 +243,7 @@ public struct ArrayArgCommand: ExecutableCommand {
     public let name: String
     public let group: String?
     public let alias: [String]
+    public let hookWhitelist: [HookID]
     public let permissionChecks: [CommandPermissionChecker]
     public let closure: (SwiftHooks, CommandEvent, Arguments) throws -> Void
     public let arguments: [CommandArgument]
@@ -231,14 +252,15 @@ public struct ArrayArgCommand: ExecutableCommand {
         return self.arguments.map(\.description).joined(separator: " ")
     }
     
-    public func copyWith(name: String, group: String?, alias: [String], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) -> ArrayArgCommand {
-        return .init(name: name, group: group, alias: alias, permissionChecks: permissionChecks, closure: closure, arguments: arguments)
+    public func copyWith(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) -> ArrayArgCommand {
+        return .init(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure, arguments: arguments)
     }
     
-    internal init(name: String, group: String?, alias: [String], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute, arguments: [CommandArgument]) {
+    internal init(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute, arguments: [CommandArgument]) {
         self.name = name
         self.group = group
         self.alias = alias
+        self.hookWhitelist = hookWhitelist
         self.permissionChecks = permissionChecks
         self.closure = closure
         self.arguments = arguments
@@ -253,7 +275,7 @@ public struct ArrayArgCommand: ExecutableCommand {
     }
     
     public func invoke(on event: CommandEvent, using hooks: SwiftHooks) throws {
-        try closure(hooks, event, Arguments(arguments: arguments))
+        try closure(hooks, event, Arguments(arguments))
     }
     
     public func arg<T>(_ t: T.Type, named: String) -> ArrayArgCommand where T: CommandArgumentConvertible {
@@ -261,6 +283,7 @@ public struct ArrayArgCommand: ExecutableCommand {
             name: name,
             group: group,
             alias: alias,
+            hookWhitelist: hookWhitelist,
             permissionChecks: permissionChecks,
             closure: { _, _, _ in },
             arguments: arguments + GenericCommandArgument<T>(componentType: T.typedName, componentName: named)
@@ -268,8 +291,14 @@ public struct ArrayArgCommand: ExecutableCommand {
     }
 }
 
-public struct Arguments {
+public class Arguments {
     let arguments: [CommandArgument]
+    private(set) var nilArgs: [String]
+    
+    init(_ arguments: [CommandArgument]) {
+        self.arguments = arguments
+        self.nilArgs = []
+    }
     
     public func getArg<A>(named name: String, on event: CommandEvent) throws -> A where A: CommandArgumentConvertible, A.ResolvedArgument == A {
         return try self.get(A.self, named: name, on: event)
@@ -279,29 +308,29 @@ public struct Arguments {
         guard let foundArg = self.arguments.first(where: {
             $0.componentType == arg.typedName &&
             $0.componentName == name
-        }), let index = arguments.firstIndex(where: { $0 == foundArg }) else {
+        }), let tempIndex = arguments.firstIndex(where: { $0 == foundArg }) else {
             throw CommandError.ArgumentNotFound(name)
         }
-        func parse(_ s: String) throws -> A.ResolvedArgument {
-            if !foundArg.isOptional && s.isEmpty {
-                throw CommandError.ArgumentNotFound(name)
+        let earlierArgs = arguments[0..<tempIndex].reduce(0) { return $0 + (self.nilArgs.contains($1.description) ? 1 : 0) }
+        let index = tempIndex - earlierArgs
+        func parse(_ s: String?) throws -> A.ResolvedArgument {
+            let a = try A.resolveArgument(s, arg: foundArg, on: event)
+            if (a as? AnyOptionalType)?.isNil ?? false {
+                self.nilArgs.append(foundArg.description)
+                return a
             }
-            return try A.resolveArgument(s, on: event)
+            return a
         }
         if foundArg.isConsuming {
-//            guard A.canConsume else { throw CommandError.ArgumentCanNotConsume(foundArg.componentName) }
             let string = event.args[index...].joined(separator: " ")
             return try parse(string)
         }
-        guard let string = event.args[safe:index] else {
-            throw CommandError.ArgumentNotFound(name)
-        }
-        return try parse(string)
+        return try parse(event.args[safe:index])
     }
 }
 
 fileprivate extension Array {
     subscript(safe index: Int) -> Element? {
-        return (index >= 0 && index < count) ? self[Int(index)] : nil
+        return (index >= 0 && index < count) ? self[index] : nil
     }
 }
