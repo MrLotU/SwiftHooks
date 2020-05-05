@@ -1,3 +1,4 @@
+/// Base command
 public struct Command: ExecutableCommand {
     public let name: String
     public let group: String?
@@ -23,6 +24,10 @@ public struct Command: ExecutableCommand {
         self.closure = closure
     }
     
+    /// Create a new command.
+    ///
+    /// - parameters:
+    ///     - name: Name and trigger of the command.
     public init(_ name: String) {
         self.name = name
         self.group = nil
@@ -34,10 +39,18 @@ public struct Command: ExecutableCommand {
 
     public func validate() throws { }
     
-    public func arg<A>(_ t: A.Type, named n: String) -> OneArgCommand<A> {
-        let x = GenericCommandArgument<A>(componentType: A.typedName, componentName: n)
+    /// Add an argument to this command
+    ///
+    ///     Command("echo")
+    ///         .arg(String.Consuming.self, named: "content")
+    ///
+    /// - parameters:
+    ///     - t: Type of the argument.
+    ///     - name: Name of the argument.
+    public func arg<A>(_ t: A.Type, named name: String) -> OneArgCommand<A> {
+        let x = GenericCommandArgument<A>(componentType: A.typedName, componentName: name)
         return OneArgCommand<A>(
-            name: name,
+            name: self.name,
             group: group,
             alias: alias,
             hookWhitelist: hookWhitelist,
@@ -72,6 +85,7 @@ fileprivate extension ExecutableCommand {
     }
 }
 
+/// Base command with one argument
 public struct OneArgCommand<A>: ExecutableCommand where A: CommandArgumentConvertible {
     public let name: String
     public let group: String?
@@ -107,20 +121,29 @@ public struct OneArgCommand<A>: ExecutableCommand where A: CommandArgumentConver
         try closure(hooks, event, a)
     }
         
-    public func arg<B>(_ t: B.Type, named: String) -> TwoArgCommand<A, B> {
+    /// Add an argument to this command
+    ///
+    ///     Command("echo")
+    ///         .arg(String.Consuming.self, named: "content")
+    ///
+    /// - parameters:
+    ///     - t: Type of the argument.
+    ///     - name: Name of the argument.
+    public func arg<B>(_ t: B.Type, named name: String) -> TwoArgCommand<A, B> {
         return TwoArgCommand<A, B>(
-            name: name,
+            name: self.name,
             group: group,
             alias: alias,
             hookWhitelist: hookWhitelist,
             permissionChecks: permissionChecks,
             closure: { _, _, _, _ in },
             argOne: arg,
-            argTwo: GenericCommandArgument<B>(componentType: B.typedName, componentName: named)
+            argTwo: GenericCommandArgument<B>(componentType: B.typedName, componentName: name)
         )
     }
 }
 
+/// Base command with two arguments
 public struct TwoArgCommand<A, B>: ExecutableCommand where A: CommandArgumentConvertible, B: CommandArgumentConvertible {
     public let name: String
     public let group: String?
@@ -163,9 +186,17 @@ public struct TwoArgCommand<A, B>: ExecutableCommand where A: CommandArgumentCon
         try self.closure(hooks, event, a, b)
     }
     
-    public func arg<C>(_ t: C.Type, named: String) -> ThreeArgCommand<A, B, C> {
+    /// Add an argument to this command
+    ///
+    ///     Command("echo")
+    ///         .arg(String.Consuming.self, named: "content")
+    ///
+    /// - parameters:
+    ///     - t: Type of the argument.
+    ///     - name: Name of the argument.
+    public func arg<C>(_ t: C.Type, named name: String) -> ThreeArgCommand<A, B, C> {
         return ThreeArgCommand<A, B, C>(
-            name: name,
+            name: self.name,
             group: group,
             alias: alias,
             hookWhitelist: hookWhitelist,
@@ -173,11 +204,12 @@ public struct TwoArgCommand<A, B>: ExecutableCommand where A: CommandArgumentCon
             closure: { _, _, _, _, _ in },
             argOne: argOne,
             argTwo: argTwo,
-            argThree: GenericCommandArgument<C>(componentType: C.typedName, componentName: named)
+            argThree: GenericCommandArgument<C>(componentType: C.typedName, componentName: name)
         )
     }
 }
 
+/// Base command with three arguments
 public struct ThreeArgCommand<A, B, C>: ExecutableCommand where A: CommandArgumentConvertible, B: CommandArgumentConvertible, C: CommandArgumentConvertible {
     public let name: String
     public let group: String?
@@ -226,19 +258,28 @@ public struct ThreeArgCommand<A, B, C>: ExecutableCommand where A: CommandArgume
         try self.closure(hooks, event, a, b, c)
     }
     
-    public func arg<T>(_ t: T.Type, named: String) -> ArrayArgCommand where T: CommandArgumentConvertible {
+    /// Add an argument to this command
+    ///
+    ///     Command("echo")
+    ///         .arg(String.Consuming.self, named: "content")
+    ///
+    /// - parameters:
+    ///     - t: Type of the argument.
+    ///     - name: Name of the argument.
+    public func arg<T>(_ t: T.Type, named name: String) -> ArrayArgCommand where T: CommandArgumentConvertible {
         return ArrayArgCommand(
-            name: name,
+            name: self.name,
             group: group,
             alias: alias,
             hookWhitelist: hookWhitelist,
             permissionChecks: permissionChecks,
             closure: { _, _, _ in },
-            arguments: [argOne, argTwo, argThree, GenericCommandArgument<T>(componentType: T.typedName, componentName: named)]
+            arguments: [argOne, argTwo, argThree, GenericCommandArgument<T>(componentType: T.typedName, componentName: name)]
         )
     }
 }
 
+/// Base command with four or more arguments
 public struct ArrayArgCommand: ExecutableCommand {
     public let name: String
     public let group: String?
@@ -246,6 +287,7 @@ public struct ArrayArgCommand: ExecutableCommand {
     public let hookWhitelist: [HookID]
     public let permissionChecks: [CommandPermissionChecker]
     public let closure: (SwiftHooks, CommandEvent, Arguments) throws -> Void
+    /// Arguments for this command.
     public let arguments: [CommandArgument]
     
     public var readableArguments: String? {
@@ -278,19 +320,29 @@ public struct ArrayArgCommand: ExecutableCommand {
         try closure(hooks, event, Arguments(arguments))
     }
     
-    public func arg<T>(_ t: T.Type, named: String) -> ArrayArgCommand where T: CommandArgumentConvertible {
+    /// Add an argument to this command
+    ///
+    ///     Command("echo")
+    ///         .arg(String.Consuming.self, named: "content")
+    ///
+    /// - parameters:
+    ///     - t: Type of the argument.
+    ///     - name: Name of the argument.
+    public func arg<T>(_ t: T.Type, named name: String) -> ArrayArgCommand where T: CommandArgumentConvertible {
         return ArrayArgCommand(
-            name: name,
+            name: self.name,
             group: group,
             alias: alias,
             hookWhitelist: hookWhitelist,
             permissionChecks: permissionChecks,
             closure: { _, _, _ in },
-            arguments: arguments + GenericCommandArgument<T>(componentType: T.typedName, componentName: named)
+            arguments: arguments + GenericCommandArgument<T>(componentType: T.typedName, componentName: name)
         )
     }
 }
 
+
+/// Arguments container used in `ArrayArgCommand`.
 public class Arguments {
     let arguments: [CommandArgument]
     private(set) var nilArgs: [String]
@@ -300,10 +352,20 @@ public class Arguments {
         self.nilArgs = []
     }
     
-    public func getArg<A>(named name: String, on event: CommandEvent) throws -> A where A: CommandArgumentConvertible, A.ResolvedArgument == A {
-        return try self.get(A.self, named: name, on: event)
-    }
-    
+    /// Resolve an argument from the command arguments
+    ///
+    ///     let reason = try args.get(String.self, named: "reason", on: event)
+    ///
+    /// - parameters:
+    ///     - arg: Type to resolve.
+    ///     - name: Name of the argument to resolve.
+    ///     - event: `CommandEvent` to resolve on.
+    ///
+    /// - throws:
+    ///     `CommandError.UnableToConvertArgument` when resolving fails.
+    ///     `CommandError.ArgumentNotFound` when no argument is found.
+    ///
+    /// - returns: The resolved argument.
     public func get<A>(_ arg: A.Type, named name: String, on event: CommandEvent) throws -> A.ResolvedArgument where A: CommandArgumentConvertible {
         guard let foundArg = self.arguments.first(where: {
             $0.componentType == arg.typedName &&

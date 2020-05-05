@@ -1,5 +1,6 @@
 import NIO
 
+/// A generic channel used in `GlobalEvent`s.
 public protocol Channelable: PayloadType {
     /// Mentions the channel. For example `#channelId`
     var mention: String { get }

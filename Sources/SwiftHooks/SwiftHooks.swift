@@ -8,18 +8,27 @@ import Logging
 ///
 /// Hooks and Plugins are both connected to the main SwiftHooks class.
 public final class SwiftHooks {
+    /// EventLoopGroup this application runs on.
     public let eventLoopGroup: EventLoopGroup
+    /// Wether or not `SwiftHooks` did shutdown.
     public private(set) var didShutdown: Bool
     private var isBooted: Bool
     private var running: EventLoopPromise<Void>?
+    /// Config used for this `SwiftHooks` instance.
     public let config: SwiftHooksConfig
     
+    /// Registered `_Hook`s.
     public internal(set) var hooks: [_Hook]
+    /// Registered `GlobalListener`s.
     public internal(set) var globalListeners: [GlobalEvent: [GlobalEventClosure]]
+    /// Registered `ExecutableCommand`s
     public internal(set) var commands: [_ExecutableCommand]
+    /// Registered `Plugin`s.
     public internal(set) var plugins: [_Plugin]
     
+    /// Global `JSONDecoder`
     public static let decoder = JSONDecoder()
+    /// Global `JSONEncoder`
     public static let encoder = JSONEncoder()
     
     /// Create a new `SwiftHooks` instance
@@ -97,6 +106,7 @@ extension SwiftHooks {
         return l
     }
     
+    /// Global SwiftHooks logger
     public var logger: Logger {
         return type(of: self).logger
     }

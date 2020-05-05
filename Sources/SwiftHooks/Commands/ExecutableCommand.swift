@@ -1,3 +1,4 @@
+/// Base `ExecutableCommand`
 public protocol _ExecutableCommand: Commands {
     /// Help description of the command. Used to explain usage to users.
     var help: String { get }
@@ -24,7 +25,9 @@ public protocol _ExecutableCommand: Commands {
     func invoke(on event: CommandEvent, using hooks: SwiftHooks) throws
 }
 
+/// Base `ExecutableCommand`
 public protocol ExecutableCommand: _ExecutableCommand {
+    /// Closure type this command will execute.
     associatedtype Execute
     /// Closure to execute when command is invoked.
     var closure: Execute { get }
@@ -34,9 +37,17 @@ public protocol ExecutableCommand: _ExecutableCommand {
 }
 
 public extension ExecutableCommand {
+    /// Human readable string of arguments required for this command.
+    ///
+    ///     command.readableArguments // "<a:Int> <b:Int> [c:String]"
     var readableArguments: String? { return nil }
+    
+    /// Trigger of the command.
+    ///
+    /// Synonym for `ExecutableCommand.name`
     var trigger: String { name }
     
+    /// Human readable help string explaining command usage.
     var help: String {
         [group, name, readableArguments].compactMap { $0 }.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
     }

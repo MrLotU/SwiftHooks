@@ -10,6 +10,10 @@ public protocol EventListeners {
 public struct Listeners: EventListeners {
     let listeners: EventListeners
     
+    /// Create new `Listeners`
+    ///
+    /// - parameters:
+    ///     - listeners: `EventListeners` in this group.
     public init(@ListenerBuilder listeners: () -> EventListeners) {
         self.listeners = listeners()
     }

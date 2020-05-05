@@ -78,7 +78,9 @@ extension CommandArgument {
     }
 }
 
-
+/// Any type capable of consuming.
+///
+/// See also `ConsumingCommandArgumentConvertible`
 public protocol AnyConsuming {}
 protocol AnyOptionalType {
     var isNil: Bool { get }
@@ -122,6 +124,10 @@ extension String: CommandArgumentConvertible {
 }
 
 public extension String {
+    /// Helper to create consuming `String` arguments.
+    ///
+    ///     Command("test")
+    ///         .arg(String.Consuming.self, "consumingString")
     struct Consuming: ConsumingCommandArgumentConvertible {
         public static var typedName: String {
             String.typedName
@@ -134,6 +140,18 @@ public extension String {
 }
 
 extension FixedWidthInteger {
+
+    /// Attempts to resolve an argument from the provided string.
+    ///
+    /// - parameters:
+    ///     - argument: String taken from the message body.
+    ///     - event: The `CommandEvent` this argument should be resolved for.
+    ///
+    /// - throws:
+    ///     `CommandError.UnableToConvertArgument` when `ResolvedArgument` can not be created from `argument`
+    ///     `CommandError.ArgumentNotFound` when no argument is found
+    ///
+    /// - returns: The resolved argument
     public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> Self {
         guard let number = Self(argument) else {
             throw CommandError.UnableToConvertArgument(argument, "\(self.self)")
@@ -154,6 +172,18 @@ extension UInt32: CommandArgumentConvertible { }
 extension UInt64: CommandArgumentConvertible { }
 
 extension BinaryFloatingPoint {
+
+    /// Attempts to resolve an argument from the provided string.
+    ///
+    /// - parameters:
+    ///     - argument: String taken from the message body.
+    ///     - event: The `CommandEvent` this argument should be resolved for.
+    ///
+    /// - throws:
+    ///     `CommandError.UnableToConvertArgument` when `ResolvedArgument` can not be created from `argument`
+    ///     `CommandError.ArgumentNotFound` when no argument is found
+    ///
+    /// - returns: The resolved argument
     public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> Self {
         guard let number = Double(argument) else {
             throw CommandError.UnableToConvertArgument(argument, "\(self.self)")

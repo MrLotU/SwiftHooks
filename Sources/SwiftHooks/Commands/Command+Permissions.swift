@@ -1,3 +1,8 @@
+/// Check if the given user has the permission to execute the command.
+///
+///     let checker = MyChecker()
+///     guard checker.check(user, canUse: command, on: event) else { throw CommandError.InvalidPermissions }
+///
 public protocol CommandPermissionChecker {
     
     /// Check if the given user has the permission to execute the command.
@@ -11,7 +16,7 @@ public protocol CommandPermissionChecker {
     ///     - event: Event holding the command & related info
     ///
     /// - Returns: Wether or not the user is allowed to execute the command
-    func check(_ user: Userable, canUse command: Command, on event: CommandEvent) -> Bool
+    func check(_ user: Userable, canUse command: _ExecutableCommand, on event: CommandEvent) -> Bool
 }
 
 /// Checks if a user is allowed to execute based on their ID
@@ -27,7 +32,7 @@ public struct IDChecker: CommandPermissionChecker {
     /// List of whitelisted IDs
     let ids: [String]
     
-    public func check(_ user: Userable, canUse command: Command, on event: CommandEvent) -> Bool {
+    public func check(_ user: Userable, canUse command: _ExecutableCommand, on event: CommandEvent) -> Bool {
         guard let id = user.identifier else { return false }
         return ids.contains(id)
     }
