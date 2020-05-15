@@ -1,5 +1,6 @@
 import Foundation
 import NIO
+import NIOConcurrencyHelpers
 import Logging
 
 /// Main SwiftHooks class. Acts as global controller.
@@ -26,6 +27,8 @@ public final class SwiftHooks {
     /// Registered `Plugin`s.
     public internal(set) var plugins: [_Plugin]
     
+    internal let lock: Lock
+    
     /// Global `JSONDecoder`
     public static let decoder = JSONDecoder()
     /// Global `JSONEncoder`
@@ -50,6 +53,7 @@ public final class SwiftHooks {
         self.commands = []
         self.plugins = []
         self.config = config
+        self.lock = Lock()
     }
     
     /// Run the SwiftHooks process. Will boot all connected `Hook`s and block forever.

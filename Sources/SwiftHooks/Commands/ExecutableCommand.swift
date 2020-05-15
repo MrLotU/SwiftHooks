@@ -1,3 +1,5 @@
+import class NIO.EventLoopFuture
+
 /// Base `ExecutableCommand`
 public protocol _ExecutableCommand: Commands {
     /// Help description of the command. Used to explain usage to users.
@@ -22,7 +24,7 @@ public protocol _ExecutableCommand: Commands {
     /// Validates if a command is valid. See also: `CommandError`
     func validate() throws
     /// Invokes a command on given event.
-    func invoke(on event: CommandEvent, using hooks: SwiftHooks) throws
+    func invoke(on event: CommandEvent) -> EventLoopFuture<Void>
 }
 
 /// Base `ExecutableCommand`

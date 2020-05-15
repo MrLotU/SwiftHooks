@@ -1,28 +1,35 @@
+import NIO
+import struct Dispatch.DispatchTime
 import Logging
 import Metrics
 
 extension SwiftHooks {
-    func handleMessage(_ message: Messageable, from h: _Hook) {
+    func handleMessage(_ message: Messageable, from h: _Hook, on eventLoop: EventLoop) {
         guard config.commands.enabled, message.content.starts(with: self.config.commands.prefix) else { return }
         let foundCommands = self.findCommands(for: message)
         
         foundCommands.forEach { (command) in
             guard command.hookWhitelist.isEmpty || command.hookWhitelist.contains(h.id) else { return }
-            let event = CommandEvent(hooks: self, cmd: command, msg: message, for: h)
+            let event = CommandEvent(hooks: self, cmd: command, msg: message, for: h, on: eventLoop)
             
-            do {
-                event.logger.debug("Invoking command")
-                event.logger.trace("Full message: \(message.content)")
-                try Timer.measure(label: "command_duration", dimensions: [("command", command.fullTrigger)]) {
-                    try command.invoke(on: event, using: self)
+            event.logger.debug("Invoking command")
+            event.logger.trace("Full message: \(message.content)")
+            let timer = Timer(label: "command_duration", dimensions: [("command", command.fullTrigger)])
+            let start = DispatchTime.now().uptimeNanoseconds
+            command.invoke(on: event).whenComplete { result in
+                let delta = DispatchTime.now().uptimeNanoseconds - start
+                timer.recordNanoseconds(delta)
+                switch result {
+                case .success(_):
+                    event.logger.debug("Command succesfully invoked.")
+                    Counter(label: "command_finish", dimensions: [("command", command.fullTrigger), ("status", "success")]).increment()
+                case .failure(let e):
+                    event.message.error(e, on: command)
+                    event.logger.error("\(e.localizedDescription)")
+                    Counter(label: "command_finish", dimensions: [("command", command.fullTrigger), ("status", "failure")]).increment()
                 }
-                event.logger.debug("Command succesfully invoked.")
-            } catch let e {
-                event.message.error(e, on: command)
-                event.logger.error("\(e.localizedDescription)")
-                Counter(label: "command_failure", dimensions: [("command", command.fullTrigger)]).increment()
+                
             }
-            Counter(label: "command_success", dimensions: [("command", command.fullTrigger)]).increment()
         }
     }
     
@@ -81,6 +88,8 @@ public struct CommandEvent {
     public let hook: _Hook
     /// Command specific logger. Has command trigger set as command metadata by default.
     public private(set) var logger: Logger
+    /// EventLoop this Command runs on.
+    public let eventLoop: EventLoop
     
     /// Create a new `CommandEvent`
     ///
@@ -89,7 +98,7 @@ public struct CommandEvent {
     ///     - cmd: Command this event is wrapping.
     ///     - msg: Message that executed the command.
     ///     - h: `_Hook` that originally dispatched this command.
-    public init(hooks: SwiftHooks, cmd: _ExecutableCommand, msg: Messageable, for h: _Hook) {
+    public init(hooks: SwiftHooks, cmd: _ExecutableCommand, msg: Messageable, for h: _Hook, on loop: EventLoop) {
         self.logger = Logger(label: "SwiftHooks.Command")
         self.hooks = hooks
         self.user = msg.gAuthor
@@ -103,6 +112,7 @@ public struct CommandEvent {
         self.name = name
         self.args = comps.map(String.init)
         self.hook = h
+        self.eventLoop = loop
         self.logger[metadataKey: "command"] = "\(cmd.fullTrigger)"
     }
 }

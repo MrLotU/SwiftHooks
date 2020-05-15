@@ -1,22 +1,23 @@
 import struct Foundation.Data
-import protocol NIO.EventLoop
+import NIO
 
-public typealias EventHandler<D: EventDispatch, I> = (D, I) throws -> Void
+public typealias EventHandler<D: EventDispatch, I> = (D, I) -> EventLoopFuture<Void>
+public typealias SyncEventHandler<D: EventDispatch, I> = (D, I) throws -> Void
 
 public protocol EventDispatch {
     var eventLoop: EventLoop { get }
     
-    init?(_ h: _Hook)
+    init?(_ h: _Hook, eventLoop: EventLoop)
 }
 
 public protocol EventType: Hashable {}
 
 public protocol PayloadType: Decodable {
-    static func create(from data: Data, on h: _Hook) -> Self?
+    static func create(from data: Data, on h: _Hook, on eventLoop: EventLoop) -> Self?
 }
 
 public extension PayloadType {
-    static func create(from data: Data, on _: _Hook) -> Self? {
+    static func create(from data: Data, on _: _Hook, on eventLoop: EventLoop) -> Self? {
         do {
             return try SwiftHooks.decoder.decode(Self.self, from: data)
         } catch {

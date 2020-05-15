@@ -52,6 +52,25 @@ public struct Listener<T, I, D>: EventListeners where T: _Event, T.ContentType =
         self.closure = closure
     }
     
+    /// Create new `Listener`.
+    ///
+    /// - parameters:
+    ///     - event: Event to listen for.
+    ///     - closure: Closure to invoke when receiving event `T`.
+    public init(_ event: T, _ closure: @escaping SyncEventHandler<D, I>) {
+        self.event = event
+        self.closure = { d, i in
+            let p = d.eventLoop.makePromise(of: Void.self)
+            do {
+                try closure(d, i)
+                p.succeed(())
+            } catch {
+                p.fail(error)
+            }
+            return p.futureResult
+        }
+    }
+    
     public func register(to h: SwiftHooks) {
         h.listen(for: event, closure)
     }
@@ -77,6 +96,20 @@ public struct GlobalListener<T, I>: EventListeners where T: _GEvent, T.ContentTy
     public init(_ event: T, _ closure: @escaping EventHandler<GlobalDispatch, I>) {
         self.event = event
         self.closure = closure
+    }
+    
+    public init(_ event: T, _ closure: @escaping SyncEventHandler<GlobalDispatch, I>) {
+        self.event = event
+        self.closure = { d, i in
+            let p = d.eventLoop.makePromise(of: Void.self)
+            do {
+                try closure(d, i)
+                p.succeed(())
+            } catch {
+                p.fail(error)
+            }
+            return p.futureResult
+        }
     }
     
     public func register(to h: SwiftHooks) {

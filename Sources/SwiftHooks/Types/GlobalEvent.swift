@@ -26,7 +26,7 @@ public struct _GlobalEvent<ContentType>: _GEvent {
 }
 
 public struct GlobalDispatch: EventDispatch {
-    public init?(_ h: _Hook) {
+    public init?(_ h: _Hook, eventLoop: EventLoop) {
         return nil
     }
     

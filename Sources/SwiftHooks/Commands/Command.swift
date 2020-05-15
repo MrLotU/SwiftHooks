@@ -1,3 +1,5 @@
+import class NIO.EventLoopFuture
+
 /// Base command
 public struct Command: ExecutableCommand {
     public let name: String
@@ -5,10 +7,10 @@ public struct Command: ExecutableCommand {
     public let alias: [String]
     public let hookWhitelist: [HookID]
     public let permissionChecks: [CommandPermissionChecker]
-    public let closure: (SwiftHooks, CommandEvent) throws -> Void
+    public let closure: (CommandEvent) -> EventLoopFuture<Void>
     
-    public func invoke(on event: CommandEvent, using hooks: SwiftHooks) throws {
-        try closure(hooks, event)
+    public func invoke(on event: CommandEvent) -> EventLoopFuture<Void> {
+        return closure(event)
     }
     
     public func copyWith(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) -> Self {
@@ -34,7 +36,7 @@ public struct Command: ExecutableCommand {
         self.alias = []
         self.hookWhitelist = []
         self.permissionChecks = []
-        self.closure = { _, _ in }
+        self.closure = { e in e.eventLoop.makeSucceededFuture(()) }
     }
 
     public func validate() throws { }
@@ -55,7 +57,7 @@ public struct Command: ExecutableCommand {
             alias: alias,
             hookWhitelist: hookWhitelist,
             permissionChecks: permissionChecks,
-            closure: { _, _, _ in },
+            closure: { e, _ in e.eventLoop.makeSucceededFuture(()) },
             arg: x
         )
     }
@@ -92,7 +94,7 @@ public struct OneArgCommand<A>: ExecutableCommand where A: CommandArgumentConver
     public let alias: [String]
     public let hookWhitelist: [HookID]
     public let permissionChecks: [CommandPermissionChecker]
-    public let closure: (SwiftHooks, CommandEvent, A.ResolvedArgument) throws -> Void
+    public let closure: (CommandEvent, A.ResolvedArgument) -> EventLoopFuture<Void>
     public var readableArguments: String? {
         arg.description
     }
@@ -115,10 +117,16 @@ public struct OneArgCommand<A>: ExecutableCommand where A: CommandArgumentConver
     
     public func validate() throws { }
     
-    public func invoke(on event: CommandEvent, using hooks: SwiftHooks) throws {
-        var idx = 0
-        let a = try getArg(A.self, &idx, for: arg, on: event)
-        try closure(hooks, event, a)
+    public func invoke(on event: CommandEvent) -> EventLoopFuture<Void> {
+        let p = event.eventLoop.makePromise(of: Void.self)
+        do {
+            var idx = 0
+            let a = try getArg(A.self, &idx, for: arg, on: event)
+            closure(event, a).cascade(to: p)
+        } catch {
+            p.fail(error)
+        }
+        return p.futureResult
     }
         
     /// Add an argument to this command
@@ -136,7 +144,7 @@ public struct OneArgCommand<A>: ExecutableCommand where A: CommandArgumentConver
             alias: alias,
             hookWhitelist: hookWhitelist,
             permissionChecks: permissionChecks,
-            closure: { _, _, _, _ in },
+            closure: { e, _, _ in e.eventLoop.makeSucceededFuture(()) },
             argOne: arg,
             argTwo: GenericCommandArgument<B>(componentType: B.typedName, componentName: name)
         )
@@ -150,7 +158,7 @@ public struct TwoArgCommand<A, B>: ExecutableCommand where A: CommandArgumentCon
     public let alias: [String]
     public let hookWhitelist: [HookID]
     public let permissionChecks: [CommandPermissionChecker]
-    public let closure: (SwiftHooks, CommandEvent, A.ResolvedArgument, B.ResolvedArgument) throws -> Void
+    public let closure: (CommandEvent, A.ResolvedArgument, B.ResolvedArgument) -> EventLoopFuture<Void>
     public var readableArguments: String? {
         [argOne, argTwo].map(\.description).joined(separator: " ")
     }
@@ -179,11 +187,17 @@ public struct TwoArgCommand<A, B>: ExecutableCommand where A: CommandArgumentCon
         }
     }
 
-    public func invoke(on event: CommandEvent, using hooks: SwiftHooks) throws {
-        var idx = 0
-        let a = try getArg(A.self, &idx, for: argOne, on: event)
-        let b = try getArg(B.self, &idx, for: argTwo, on: event)
-        try self.closure(hooks, event, a, b)
+    public func invoke(on event: CommandEvent) -> EventLoopFuture<Void> {
+        let p = event.eventLoop.makePromise(of: Void.self)
+        do {
+            var idx = 0
+            let a = try getArg(A.self, &idx, for: argOne, on: event)
+            let b = try getArg(B.self, &idx, for: argTwo, on: event)
+            self.closure(event, a, b).cascade(to: p)
+        } catch {
+            p.fail(error)
+        }
+        return p.futureResult
     }
     
     /// Add an argument to this command
@@ -201,7 +215,7 @@ public struct TwoArgCommand<A, B>: ExecutableCommand where A: CommandArgumentCon
             alias: alias,
             hookWhitelist: hookWhitelist,
             permissionChecks: permissionChecks,
-            closure: { _, _, _, _, _ in },
+            closure: { e, _, _, _ in e.eventLoop.makeSucceededFuture(()) },
             argOne: argOne,
             argTwo: argTwo,
             argThree: GenericCommandArgument<C>(componentType: C.typedName, componentName: name)
@@ -216,7 +230,7 @@ public struct ThreeArgCommand<A, B, C>: ExecutableCommand where A: CommandArgume
     public let alias: [String]
     public let hookWhitelist: [HookID]
     public let permissionChecks: [CommandPermissionChecker]
-    public let closure: (SwiftHooks, CommandEvent, A.ResolvedArgument, B.ResolvedArgument, C.ResolvedArgument) throws -> Void
+    public let closure: (CommandEvent, A.ResolvedArgument, B.ResolvedArgument, C.ResolvedArgument) -> EventLoopFuture<Void>
     public var readableArguments: String? {
         [argOne, argTwo, argThree].map(\.description).joined(separator: " ")
     }
@@ -250,12 +264,18 @@ public struct ThreeArgCommand<A, B, C>: ExecutableCommand where A: CommandArgume
         }
     }
 
-    public func invoke(on event: CommandEvent, using hooks: SwiftHooks) throws {
-        var idx = 0
-        let a = try getArg(A.self, &idx, for: argOne, on: event)
-        let b = try getArg(B.self, &idx, for: argTwo, on: event)
-        let c = try getArg(C.self, &idx, for: argThree, on: event)
-        try self.closure(hooks, event, a, b, c)
+    public func invoke(on event: CommandEvent) -> EventLoopFuture<Void> {
+        let p = event.eventLoop.makePromise(of: Void.self)
+        do {
+            var idx = 0
+            let a = try getArg(A.self, &idx, for: argOne, on: event)
+            let b = try getArg(B.self, &idx, for: argTwo, on: event)
+            let c = try getArg(C.self, &idx, for: argThree, on: event)
+            self.closure(event, a, b, c).cascade(to: p)
+        } catch {
+            p.fail(error)
+        }
+        return p.futureResult
     }
     
     /// Add an argument to this command
@@ -273,7 +293,7 @@ public struct ThreeArgCommand<A, B, C>: ExecutableCommand where A: CommandArgume
             alias: alias,
             hookWhitelist: hookWhitelist,
             permissionChecks: permissionChecks,
-            closure: { _, _, _ in },
+            closure: { e, _ in e.eventLoop.makeSucceededFuture(()) },
             arguments: [argOne, argTwo, argThree, GenericCommandArgument<T>(componentType: T.typedName, componentName: name)]
         )
     }
@@ -286,7 +306,7 @@ public struct ArrayArgCommand: ExecutableCommand {
     public let alias: [String]
     public let hookWhitelist: [HookID]
     public let permissionChecks: [CommandPermissionChecker]
-    public let closure: (SwiftHooks, CommandEvent, Arguments) throws -> Void
+    public let closure: (CommandEvent, Arguments) throws -> EventLoopFuture<Void>
     /// Arguments for this command.
     public let arguments: [CommandArgument]
     
@@ -316,8 +336,14 @@ public struct ArrayArgCommand: ExecutableCommand {
         }
     }
     
-    public func invoke(on event: CommandEvent, using hooks: SwiftHooks) throws {
-        try closure(hooks, event, Arguments(arguments))
+    public func invoke(on event: CommandEvent) -> EventLoopFuture<Void> {
+        let p = event.eventLoop.makePromise(of: Void.self)
+        do {
+            try closure(event, Arguments(arguments)).cascade(to: p)
+        } catch {
+            p.fail(error)
+        }
+        return p.futureResult
     }
     
     /// Add an argument to this command
@@ -335,7 +361,7 @@ public struct ArrayArgCommand: ExecutableCommand {
             alias: alias,
             hookWhitelist: hookWhitelist,
             permissionChecks: permissionChecks,
-            closure: { _, _, _ in },
+            closure: { e, _ in e.eventLoop.makeSucceededFuture(()) },
             arguments: arguments + GenericCommandArgument<T>(componentType: T.typedName, componentName: name)
         )
     }
