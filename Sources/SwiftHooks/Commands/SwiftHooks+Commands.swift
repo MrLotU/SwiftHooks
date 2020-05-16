@@ -16,19 +16,22 @@ extension SwiftHooks {
             event.logger.trace("Full message: \(message.content)")
             let timer = Timer(label: "command_duration", dimensions: [("command", command.fullTrigger)])
             let start = DispatchTime.now().uptimeNanoseconds
-            command.invoke(on: event).whenComplete { result in
-                let delta = DispatchTime.now().uptimeNanoseconds - start
-                timer.recordNanoseconds(delta)
-                switch result {
-                case .success(_):
-                    event.logger.debug("Command succesfully invoked.")
-                    Counter(label: "command_finish", dimensions: [("command", command.fullTrigger), ("status", "success")]).increment()
-                case .failure(let e):
+            command.invoke(on: event)
+                .flatMapErrorThrowing({ (e)  in
                     event.message.error(e, on: command)
-                    event.logger.error("\(e.localizedDescription)")
-                    Counter(label: "command_finish", dimensions: [("command", command.fullTrigger), ("status", "failure")]).increment()
-                }
-                
+                    throw e
+                })
+                .whenComplete { result in
+                    let delta = DispatchTime.now().uptimeNanoseconds - start
+                    timer.recordNanoseconds(delta)
+                    switch result {
+                    case .success(_):
+                        event.logger.debug("Command succesfully invoked.")
+                        Counter(label: "command_finish", dimensions: [("command", command.fullTrigger), ("status", "success")]).increment()
+                    case .failure(let e):
+                        event.logger.error("\(e.localizedDescription)")
+                        Counter(label: "command_finish", dimensions: [("command", command.fullTrigger), ("status", "failure")]).increment()
+                    }
             }
         }
     }

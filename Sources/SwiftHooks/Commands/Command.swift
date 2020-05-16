@@ -76,11 +76,8 @@ public struct Command: ExecutableCommand {
 
 fileprivate extension ExecutableCommand {
     func getArg<T>(_ t: T.Type = T.self, _ index: inout Int, for arg: CommandArgument, on event: CommandEvent) throws -> T.ResolvedArgument where T: CommandArgumentConvertible {
-        func parse(_ s: String) throws -> T.ResolvedArgument {
-            if !arg.isOptional && s.isEmpty {
-                throw CommandError.ArgumentNotFound(name)
-            }
-            let t = try T.resolveArgument(s, on: event)
+        func parse(_ s: String?) throws -> T.ResolvedArgument {
+            let t = try T.resolveArgument(s, arg: arg, on: event)
             if (t as? AnyOptionalType)?.isNil ?? false {
                 return t
             }
@@ -91,10 +88,7 @@ fileprivate extension ExecutableCommand {
             let s = event.args[index...].joined(separator: " ")
             return try parse(s)
         }
-        guard let s = event.args[safe:index] else {
-            throw CommandError.ArgumentNotFound(arg.componentName)
-        }
-        return try parse(s)
+        return try parse(event.args[safe:index])
     }
 }
 
