@@ -17,7 +17,7 @@ extension SwiftHooks {
                 return el.makeFailedFuture(SwiftHooksError.ConcreteTypeCreationFailure("\(I.self)"))
             }
             
-            return handler(.init(self.eventLoopGroup.next()), object)
+            return handler(.init(el), object)
         }
         self.globalListeners[event] = closures
     }
