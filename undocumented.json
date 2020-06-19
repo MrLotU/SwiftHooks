@@ -1,0 +1,383 @@
+{
+  "warnings": [
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Commands/Command.swift",
+      "line": 3,
+      "symbol": "AnyFuture",
+      "symbol_kind": "source.lang.swift.decl.protocol",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Commands/Command.swift",
+      "line": 4,
+      "symbol": "AnyFuture.toVoidFuture()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Commands/Command.swift",
+      "line": 9,
+      "symbol": "EventLoopFuture.toVoidFuture()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Config.swift",
+      "line": 5,
+      "symbol": "SwiftHooksConfig.Commands",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Config.swift",
+      "line": 6,
+      "symbol": "SwiftHooksConfig.Commands.Prefix",
+      "symbol_kind": "source.lang.swift.decl.enum",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Hooks/Hook.swift",
+      "line": 6,
+      "symbol": "HookID.identifier",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Hooks/Hook.swift",
+      "line": 7,
+      "symbol": "HookID.init(identifier:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Hooks/Hook.swift",
+      "line": 16,
+      "symbol": "Hook.Options",
+      "symbol_kind": "source.lang.swift.decl.associatedtype",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Hooks/Hook.swift",
+      "line": 83,
+      "symbol": "HookOptions",
+      "symbol_kind": "source.lang.swift.decl.protocol",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Listeners/EventListeners.swift",
+      "line": 101,
+      "symbol": "GlobalListener.init(_:_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Listeners/SwiftHooks+Dispatch.swift",
+      "line": 5,
+      "symbol": "EventClosure",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Listeners/SwiftHooks+Dispatch.swift",
+      "line": 6,
+      "symbol": "GlobalEventClosure",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Listeners/SwiftHooks+Listeners.swift",
+      "line": 27,
+      "symbol": "SwiftHooksError",
+      "symbol_kind": "source.lang.swift.decl.enum",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Listeners/SwiftHooks+Listeners.swift",
+      "line": 28,
+      "symbol": "SwiftHooksError.ConcreteTypeCreationFailure(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Listeners/SwiftHooks+Listeners.swift",
+      "line": 29,
+      "symbol": "SwiftHooksError.DispatchCreationError",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Listeners/SwiftHooks+Listeners.swift",
+      "line": 30,
+      "symbol": "SwiftHooksError.GenericTypeCreationFailure(_:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Plugins/Plugin.swift",
+      "line": 21,
+      "symbol": "Plugin.C",
+      "symbol_kind": "source.lang.swift.decl.associatedtype",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Plugins/Plugin.swift",
+      "line": 22,
+      "symbol": "Plugin.L",
+      "symbol_kind": "source.lang.swift.decl.associatedtype",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/Event.swift",
+      "line": 4,
+      "symbol": "EventHandler",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/Event.swift",
+      "line": 5,
+      "symbol": "SyncEventHandler",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/Event.swift",
+      "line": 7,
+      "symbol": "EventDispatch",
+      "symbol_kind": "source.lang.swift.decl.protocol",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/Event.swift",
+      "line": 8,
+      "symbol": "EventDispatch.eventLoop",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/Event.swift",
+      "line": 10,
+      "symbol": "EventDispatch.init(_:eventLoop:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/Event.swift",
+      "line": 13,
+      "symbol": "EventType",
+      "symbol_kind": "source.lang.swift.decl.protocol",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/Event.swift",
+      "line": 15,
+      "symbol": "PayloadType",
+      "symbol_kind": "source.lang.swift.decl.protocol",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/Event.swift",
+      "line": 16,
+      "symbol": "PayloadType.create(from:on:on:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/Event.swift",
+      "line": 19,
+      "symbol": "PayloadType",
+      "symbol_kind": "source.lang.swift.decl.extension",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/Event.swift",
+      "line": 20,
+      "symbol": "PayloadType.create(from:on:on:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/Event.swift",
+      "line": 30,
+      "symbol": "_Event",
+      "symbol_kind": "source.lang.swift.decl.protocol",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/Event.swift",
+      "line": 31,
+      "symbol": "_Event.ContentType",
+      "symbol_kind": "source.lang.swift.decl.associatedtype",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/Event.swift",
+      "line": 32,
+      "symbol": "_Event.E",
+      "symbol_kind": "source.lang.swift.decl.associatedtype",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/Event.swift",
+      "line": 33,
+      "symbol": "_Event.D",
+      "symbol_kind": "source.lang.swift.decl.associatedtype",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/Event.swift",
+      "line": 34,
+      "symbol": "_Event.event",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/Event.swift",
+      "line": 37,
+      "symbol": "_Event",
+      "symbol_kind": "source.lang.swift.decl.extension",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/Event.swift",
+      "line": 46,
+      "symbol": "Dictionary.subscript(_:)",
+      "symbol_kind": "source.lang.swift.decl.function.subscript",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/Event.swift",
+      "line": 55,
+      "symbol": "Dictionary.subscript(_:default:)",
+      "symbol_kind": "source.lang.swift.decl.function.subscript",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/GlobalEvent.swift",
+      "line": 3,
+      "symbol": "_GEvent",
+      "symbol_kind": "source.lang.swift.decl.protocol",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/GlobalEvent.swift",
+      "line": 4,
+      "symbol": "_GEvent.ContentType",
+      "symbol_kind": "source.lang.swift.decl.associatedtype",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/GlobalEvent.swift",
+      "line": 5,
+      "symbol": "_GEvent.E",
+      "symbol_kind": "source.lang.swift.decl.associatedtype",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/GlobalEvent.swift",
+      "line": 6,
+      "symbol": "_GEvent.event",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/GlobalEvent.swift",
+      "line": 7,
+      "symbol": "_GEvent.init(_:_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/GlobalEvent.swift",
+      "line": 10,
+      "symbol": "_GEvent",
+      "symbol_kind": "source.lang.swift.decl.extension",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/GlobalEvent.swift",
+      "line": 18,
+      "symbol": "_GlobalEvent",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/GlobalEvent.swift",
+      "line": 19,
+      "symbol": "_GlobalEvent.E",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/GlobalEvent.swift",
+      "line": 20,
+      "symbol": "_GlobalEvent.D",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/GlobalEvent.swift",
+      "line": 21,
+      "symbol": "_GlobalEvent.event",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/GlobalEvent.swift",
+      "line": 23,
+      "symbol": "_GlobalEvent.init(_:_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/GlobalEvent.swift",
+      "line": 28,
+      "symbol": "GlobalDispatch",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/GlobalEvent.swift",
+      "line": 29,
+      "symbol": "GlobalDispatch.init(_:eventLoop:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/GlobalEvent.swift",
+      "line": 33,
+      "symbol": "GlobalDispatch.init(_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/GlobalEvent.swift",
+      "line": 35,
+      "symbol": "GlobalDispatch.eventLoop",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/GlobalEvent.swift",
+      "line": 38,
+      "symbol": "Global",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/GlobalEvent.swift",
+      "line": 40,
+      "symbol": "GlobalEvent",
+      "symbol_kind": "source.lang.swift.decl.enum",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/lotu/Documents/Hooks/SwiftHooks/Sources/SwiftHooks/Types/GlobalEvent.swift",
+      "line": 41,
+      "symbol": "GlobalEvent._messageCreate",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    }
+  ],
+  "source_directory": "/Users/lotu/Documents/Hooks/SwiftHooks"
+}
