@@ -3,10 +3,21 @@ import struct Dispatch.DispatchTime
 import Logging
 import Metrics
 
+extension Userable {
+    var prefix: String {
+        return mention + " "
+    }
+}
+
 extension SwiftHooks {
     func handleMessage(_ message: Messageable, from h: _Hook, on eventLoop: EventLoop) {
-        guard config.commands.enabled, message.content.starts(with: self.config.commands.prefix) else { return }
-        let foundCommands = self.findCommands(for: message)
+        let p: String?
+        switch self.config.commands.prefix {
+        case .mention: p = h.user?.prefix
+        case .string(let s): p = s
+        }
+        guard let prefix = p, config.commands.enabled, message.content.starts(with: prefix) else { return }
+        let foundCommands = self.findCommands(for: message, withPrefix: prefix)
         
         foundCommands.forEach { (command) in
             guard command.hookWhitelist.isEmpty || command.hookWhitelist.contains(h.id) else { return }
@@ -36,8 +47,8 @@ extension SwiftHooks {
         }
     }
     
-    func findCommands(for message: Messageable) -> [_ExecutableCommand] {
-        return self.commands.compactMap { return message.content.starts(with: self.config.commands.prefix + $0.fullTrigger) ? $0 : nil }
+    func findCommands(for message: Messageable, withPrefix prefix: String) -> [_ExecutableCommand] {
+        return self.commands.compactMap { return message.content.starts(with: prefix + $0.fullTrigger) ? $0 : nil }
     }
 }
 

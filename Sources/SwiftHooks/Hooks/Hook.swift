@@ -36,6 +36,8 @@ public protocol _Hook {
     
     /// Refference to the main `SwiftHooks` class.
     var hooks: SwiftHooks? { get }
+    /// The bot user this Hook controls. Can be `nil` if no bot user exists.
+    var user: Userable? { get }
     /// EventLoopGroup this hook is running on. If not used standalone, this will be shared with the main `SwiftHooks` class.
     var eventLoopGroup: EventLoopGroup { get }
     /// Identifier of the hook. See `HookID`
