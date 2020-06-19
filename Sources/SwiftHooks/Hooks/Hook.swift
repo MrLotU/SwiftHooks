@@ -36,6 +36,8 @@ public protocol _Hook {
     
     /// Refference to the main `SwiftHooks` class.
     var hooks: SwiftHooks? { get }
+    /// The bot user this Hook controls. Can be `nil` if no bot user exists.
+    var user: Userable? { get }
     /// EventLoopGroup this hook is running on. If not used standalone, this will be shared with the main `SwiftHooks` class.
     var eventLoopGroup: EventLoopGroup { get }
     /// Identifier of the hook. See `HookID`
@@ -51,7 +53,7 @@ public protocol _Hook {
     /// Dispatch an event.
     ///
     /// This function should invoke all listeners listening for `E`, and signal the event to the main `SwiftHooks` class.
-    func dispatchEvent<E>(_ event: E, with raw: Data) where E: EventType
+    func dispatchEvent<E>(_ event: E, with raw: Data, on eventLoop: EventLoop) -> EventLoopFuture<Void> where E: EventType
     
     /// Used for global events.
     ///
@@ -61,7 +63,7 @@ public protocol _Hook {
     /// Used for global events.
     ///
     /// Gets a concrete type for a global event, type-erased to a protocol.
-    func decodeConcreteType<T>(for event: GlobalEvent, with data: Data, as t: T.Type) -> T?
+    func decodeConcreteType<T>(for event: GlobalEvent, with data: Data, as t: T.Type, on eventLoop: EventLoop) -> T?
 }
 
 public extension _Hook {

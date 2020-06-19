@@ -34,7 +34,9 @@ public struct Group: Commands {
         return commands.executables()
     }
     
-    /// NOTE: Only one group prefix is supported. So calling `.group(_:)` on a Group will not do anything
+    /// Add a group prefix to these commands.
+    ///
+    /// **NOTE**: Only one group prefix is supported. So calling `.group(_:)` on a Group will not do anything
     public func group(_ group: String) -> Group {
         return self
     }

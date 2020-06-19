@@ -29,7 +29,7 @@ final class SwiftHooksTests: XCTestCase {
                 
         try hooks.boot()
         
-        testHook.dispatchEvent(TestEvent._messageCreate, with: Data())
+        try testHook.dispatchEvent(TestEvent._messageCreate, with: Data(), on: testHook.eventLoopGroup.next()).wait()
         
         XCTAssertEqual(plugin.messages.count, 2)
         XCTAssertEqual(plugin.messages, ["!ping", "!ping"])
