@@ -21,7 +21,7 @@ extension SwiftHooks {
         
         foundCommands.forEach { (command) in
             guard command.hookWhitelist.isEmpty || command.hookWhitelist.contains(h.id) else { return }
-            let event = CommandEvent(hooks: self, cmd: command, msg: message, for: h, on: eventLoop)
+            let event = CommandEvent(hooks: self, cmd: command, msg: message, prefix: prefix, for: h, on: eventLoop)
             
             event.logger.debug("Invoking command")
             event.logger.trace("Full message: \(message.content)")
@@ -112,12 +112,14 @@ public struct CommandEvent {
     ///     - cmd: Command this event is wrapping.
     ///     - msg: Message that executed the command.
     ///     - h: `_Hook` that originally dispatched this command.
-    public init(hooks: SwiftHooks, cmd: _ExecutableCommand, msg: Messageable, for h: _Hook, on loop: EventLoop) {
+    public init(hooks: SwiftHooks, cmd: _ExecutableCommand, msg: Messageable, prefix: String, for h: _Hook, on loop: EventLoop) {
         self.logger = Logger(label: "SwiftHooks.Command")
         self.hooks = hooks
         self.user = msg.gAuthor
         self.message = msg
-        var comps = msg.content.split(separator: " ")
+        let prefixEnd = msg.content.index(msg.content.startIndex, offsetBy: prefix.count)
+        let content = msg.content.replacingCharacters(in: msg.content.startIndex..<prefixEnd, with: "")
+        var comps = content.split(separator: " ")
         let hasGroup = cmd.group != nil
         var name = "\(comps.removeFirst())"
         if hasGroup {

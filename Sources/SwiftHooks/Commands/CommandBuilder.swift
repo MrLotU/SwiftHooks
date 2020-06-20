@@ -51,20 +51,39 @@ public struct CommandTuple<T>: Commands {
         } else if let (c0, c1, c2, c3, c4) = tuple as? (Commands, Commands, Commands, Commands, Commands) {
             return [c0, c1, c2, c3, c4].commands()
         } else if let (c0, c1, c2, c3, c4, c5) = tuple as? (Commands, Commands, Commands, Commands, Commands, Commands) {
-           return [c0, c1, c2, c3, c4, c5].commands()
+            return [c0, c1, c2, c3, c4, c5].commands()
         } else if let (c0, c1, c2, c3, c4, c5, c6) = tuple as? (Commands, Commands, Commands, Commands, Commands, Commands, Commands) {
-           return [c0, c1, c2, c3, c4, c5, c6].commands()
+            return [c0, c1, c2, c3, c4, c5, c6].commands()
         } else if let (c0, c1, c2, c3, c4, c5, c6, c7) = tuple as? (Commands, Commands, Commands, Commands, Commands, Commands, Commands, Commands) {
-           return [c0, c1, c2, c3, c4, c5, c6, c7].commands()
+            return [c0, c1, c2, c3, c4, c5, c6, c7].commands()
         } else if let (c0, c1, c2, c3, c4, c5, c6, c7, c8) = tuple as? (Commands, Commands, Commands, Commands, Commands, Commands, Commands, Commands, Commands) {
-           return [c0, c1, c2, c3, c4, c5, c6, c7, c8].commands()
+            return [c0, c1, c2, c3, c4, c5, c6, c7, c8].commands()
         } else if let (c0, c1, c2, c3, c4, c5, c6, c7, c8, c9) = tuple as? (Commands, Commands, Commands, Commands, Commands, Commands, Commands, Commands, Commands, Commands) {
-           return [c0, c1, c2, c3, c4, c5, c6, c7, c8, c9].commands()
+            return [c0, c1, c2, c3, c4, c5, c6, c7, c8, c9].commands()
         }
         return []
     }
     
     public func group(_ group: String) -> CommandTuple<T> {
+        if let (c0, c1) = tuple as? (Commands, Commands) {
+            return .init(tuple: (c0.group(group), c1.group(group)) as! T)
+        } else if let (c0, c1, c2) = tuple as? (Commands, Commands, Commands) {
+            return .init(tuple: (c0.group(group), c1.group(group), c2.group(group)) as! T)
+        } else if let (c0, c1, c2, c3) = tuple as? (Commands, Commands, Commands, Commands) {
+            return .init(tuple: (c0.group(group), c1.group(group), c2.group(group), c3.group(group)) as! T)
+        } else if let (c0, c1, c2, c3, c4) = tuple as? (Commands, Commands, Commands, Commands, Commands) {
+            return .init(tuple: (c0.group(group), c1.group(group), c2.group(group), c3.group(group), c4.group(group)) as! T)
+        } else if let (c0, c1, c2, c3, c4, c5) = tuple as? (Commands, Commands, Commands, Commands, Commands, Commands) {
+            return .init(tuple: (c0.group(group), c1.group(group), c2.group(group), c3.group(group), c4.group(group), c5.group(group)) as! T)
+        } else if let (c0, c1, c2, c3, c4, c5, c6) = tuple as? (Commands, Commands, Commands, Commands, Commands, Commands, Commands) {
+            return .init(tuple: (c0.group(group), c1.group(group), c2.group(group), c3.group(group), c4.group(group), c5.group(group), c6.group(group)) as! T)
+        } else if let (c0, c1, c2, c3, c4, c5, c6, c7) = tuple as? (Commands, Commands, Commands, Commands, Commands, Commands, Commands, Commands) {
+            return .init(tuple: (c0.group(group), c1.group(group), c2.group(group), c3.group(group), c4.group(group), c5.group(group), c6.group(group), c7.group(group)) as! T)
+        } else if let (c0, c1, c2, c3, c4, c5, c6, c7, c8) = tuple as? (Commands, Commands, Commands, Commands, Commands, Commands, Commands, Commands, Commands) {
+            return .init(tuple: (c0.group(group), c1.group(group), c2.group(group), c3.group(group), c4.group(group), c5.group(group), c6.group(group), c7.group(group), c8.group(group)) as! T)
+        } else if let (c0, c1, c2, c3, c4, c5, c6, c7, c8, c9) = tuple as? (Commands, Commands, Commands, Commands, Commands, Commands, Commands, Commands, Commands, Commands) {
+            return .init(tuple: (c0.group(group), c1.group(group), c2.group(group), c3.group(group), c4.group(group), c5.group(group), c6.group(group), c7.group(group), c8.group(group), c9.group(group)) as! T)
+        }
         return self
     }
     
