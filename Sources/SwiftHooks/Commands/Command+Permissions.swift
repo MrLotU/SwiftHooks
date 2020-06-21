@@ -32,6 +32,10 @@ public struct IDChecker: CommandPermissionChecker {
     /// List of whitelisted IDs
     let ids: [String]
     
+    public init(_ ids: String...) {
+        self.ids = ids
+    }
+    
     public func check(_ user: Userable, canUse command: _ExecutableCommand, on event: CommandEvent) -> Bool {
         guard let id = user.identifier else { return false }
         return ids.contains(id)

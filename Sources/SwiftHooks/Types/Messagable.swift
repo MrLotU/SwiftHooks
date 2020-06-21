@@ -52,7 +52,7 @@ public extension Messageable {
         case CommandError.ArgumentNotFound(let arg):
             self.reply("Missing argument: \(arg)\nUsage: \(command.help)")
         case CommandError.InvalidPermissions:
-           self.reply("Invalid permissions!\nUsage: \(command.help)")
+           self.reply("Invalid permissions!")
         case CommandError.UnableToConvertArgument(let arg, let type):
            self.reply("Error converting \(arg) to \(type)\nUsage: \(command.help)")
         default:

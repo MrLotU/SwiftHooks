@@ -22,13 +22,18 @@ extension SwiftHooks {
         foundCommands.forEach { (command) in
             guard command.hookWhitelist.isEmpty || command.hookWhitelist.contains(h.id) else { return }
             let event = CommandEvent(hooks: self, cmd: command, msg: message, prefix: prefix, for: h, on: eventLoop)
+            guard command.permissionChecks.map({ check in
+                check.check(message.gAuthor, canUse: command, on: event)
+            }).allSatisfy({ bool in bool }) else {
+                return event.message.error(CommandError.InvalidPermissions, on: command)
+            }
             
             event.logger.debug("Invoking command")
             event.logger.trace("Full message: \(message.content)")
             let timer = Timer(label: "command_duration", dimensions: [("command", command.fullTrigger)])
             let start = DispatchTime.now().uptimeNanoseconds
             command.invoke(on: event)
-                .flatMapErrorThrowing({ (e)  in
+                .flatMapErrorThrowing({ (e) in
                     event.message.error(e, on: command)
                     throw e
                 })
