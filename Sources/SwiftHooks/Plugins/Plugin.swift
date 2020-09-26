@@ -22,9 +22,9 @@ public protocol Plugin: _Plugin {
     associatedtype L: EventListeners
     
     /// Commands in this `Plugin`. Use `Group` to group commands together.
-    var commands: Self.C { get }
+    @CommandBuilder var commands: Self.C { get }
     /// Listeners in this `Plugin`. Use `Listeners` to group listeners together.
-    var listeners: Self.L { get }
+    @ListenerBuilder var listeners: Self.L { get }
 }
 
 public extension Plugin {
