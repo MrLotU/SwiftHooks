@@ -1,4 +1,5 @@
 import class NIO.EventLoopFuture
+import protocol NIO.EventLoop
 
 /// Base `ExecutableCommand`
 public protocol _ExecutableCommand: Commands {
@@ -27,15 +28,30 @@ public protocol _ExecutableCommand: Commands {
     func invoke(on event: CommandEvent) -> EventLoopFuture<Void>
 }
 
+public protocol _EventType {
+    static func from(_ event: CommandEvent) -> Self
+    var eventLoop: EventLoop { get }
+}
+
+extension CommandEvent: _EventType {
+    public static func from(_ event: CommandEvent) -> CommandEvent {
+        return event
+    }
+}
+
 /// Base `ExecutableCommand`
 public protocol ExecutableCommand: _ExecutableCommand {
     /// Closure type this command will execute.
     associatedtype Execute
     /// Closure to execute when command is invoked.
     var closure: Execute { get }
-    
+
+    associatedtype EventType: _EventType
+
     /// Used for FunctionBuilder Copy On Write.
     func copyWith(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: Execute) -> Self
+    
+    func changeEventType<N>(_ to: N.Type) -> Self where Self.EventType == N
 }
 
 public extension ExecutableCommand {
