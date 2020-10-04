@@ -1,9 +1,24 @@
+import NIO
+
 /// Check if the given user has the permission to execute the command.
 ///
 ///     let checker = MyChecker()
 ///     guard checker.check(user, canUse: command, on: event) else { throw CommandError.InvalidPermissions }
 ///
 public protocol CommandPermissionChecker {
+    
+    /// Check if the given user has the permission to execute the command.
+    ///
+    ///     let checker = MyChecker()
+    ///     guard checker.check(user, canUse: command, on: event) else { throw CommandError.InvalidPermissions }
+    ///
+    /// - Parameters:
+    ///     - user: User executing the command
+    ///     - command: Command being executed
+    ///     - event: Event holding the command & related info
+    ///
+    /// - Returns: Wether or not the user is allowed to execute the command
+    func check(_ user: Userable, canUse command: _ExecutableCommand, on event: CommandEvent) -> EventLoopFuture<Bool>
     
     /// Check if the given user has the permission to execute the command.
     ///
@@ -39,5 +54,11 @@ public struct IDChecker: CommandPermissionChecker {
     public func check(_ user: Userable, canUse command: _ExecutableCommand, on event: CommandEvent) -> Bool {
         guard let id = user.identifier else { return false }
         return ids.contains(id)
+    }
+}
+
+extension CommandPermissionChecker {
+    public func check(_ user: Userable, canUse command: _ExecutableCommand, on event: CommandEvent) -> EventLoopFuture<Bool> {
+        return event.eventLoop.makeSucceededFuture(self.check(user, canUse: command, on: event))
     }
 }

@@ -17,6 +17,8 @@ public final class SwiftHooks {
     private var running: EventLoopPromise<Void>?
     /// Config used for this `SwiftHooks` instance.
     public let config: SwiftHooksConfig
+    /// SwiftHooks storage.
+    public var storage: Storage
     
     /// Registered `_Hook`s.
     public internal(set) var hooks: [_Hook]
@@ -53,6 +55,7 @@ public final class SwiftHooks {
         self.commands = []
         self.plugins = []
         self.config = config
+        self.storage = .init()
         self.lock = Lock()
     }
     

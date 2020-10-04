@@ -26,7 +26,7 @@ public protocol CommandArgumentConvertible {
     ///     `CommandError.ArgumentNotFound` when no argument is found
     ///
     /// - returns: The resolved argument
-    static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> ResolvedArgument
+    static func resolveArgument(_ argument: String, on event: _EventType) throws -> ResolvedArgument
     
     /// Attempts to resolve an argument from the provided string.
     ///
@@ -42,7 +42,7 @@ public protocol CommandArgumentConvertible {
     ///     `CommandError.ArgumentNotFound` when no argument is found
     ///
     /// - returns: The resolved argument
-    static func resolveArgument(_ argument: String?, arg: CommandArgument, on event: CommandEvent) throws -> ResolvedArgument
+    static func resolveArgument(_ argument: String?, arg: CommandArgument, on event: _EventType) throws -> ResolvedArgument
 }
 
 /// Marks a type as both `CommandArgumentConvertible` and `Consuming`.
@@ -109,7 +109,7 @@ extension CommandArgumentConvertible {
         return "\(Self.self)"
     }
     
-    public static func resolveArgument(_ argument: String?, arg: CommandArgument, on event: CommandEvent) throws -> Self.ResolvedArgument {
+    public static func resolveArgument(_ argument: String?, arg: CommandArgument, on event: _EventType) throws -> Self.ResolvedArgument {
         guard let argument = argument else {
             throw CommandError.ArgumentNotFound(arg.componentName)
         }
@@ -118,7 +118,7 @@ extension CommandArgumentConvertible {
 }
 
 extension String: CommandArgumentConvertible {
-    public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> String {
+    public static func resolveArgument(_ argument: String, on event: _EventType) throws -> String {
         return argument
     }
 }
@@ -133,7 +133,14 @@ public extension String {
             String.typedName
         }
         public typealias ResolvedArgument = String
-        public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> String {
+        public static func resolveArgument(_ argument: String?, arg: CommandArgument, on event: _EventType) throws -> String {
+            if let argument = argument, !argument.isEmpty {
+                return argument
+            } else {
+                throw CommandError.ArgumentNotFound(arg.componentName)
+            }
+        }
+        public static func resolveArgument(_ argument: String, on event: _EventType) throws -> String {
             return argument
         }
     }
@@ -152,7 +159,7 @@ extension FixedWidthInteger {
     ///     `CommandError.ArgumentNotFound` when no argument is found
     ///
     /// - returns: The resolved argument
-    public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> Self {
+    public static func resolveArgument(_ argument: String, on event: _EventType) throws -> Self {
         guard let number = Self(argument) else {
             throw CommandError.UnableToConvertArgument(argument, "\(self.self)")
         }
@@ -184,7 +191,7 @@ extension BinaryFloatingPoint {
     ///     `CommandError.ArgumentNotFound` when no argument is found
     ///
     /// - returns: The resolved argument
-    public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> Self {
+    public static func resolveArgument(_ argument: String, on event: _EventType) throws -> Self {
         guard let number = Double(argument) else {
             throw CommandError.UnableToConvertArgument(argument, "\(self.self)")
         }
@@ -197,7 +204,7 @@ extension Float: CommandArgumentConvertible { }
 extension Double: CommandArgumentConvertible { }
 
 extension UUID: CommandArgumentConvertible {
-    public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> UUID {
+    public static func resolveArgument(_ argument: String, on event: _EventType) throws -> UUID {
         guard let uuid = UUID(uuidString: argument) else {
             throw CommandError.UnableToConvertArgument(argument, "\(self.self)")
         }
@@ -212,7 +219,12 @@ extension Array: ConsumingCommandArgumentConvertible, CommandArgumentConvertible
         return "\(Element.typedName)"
     }
     
-    public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> ResolvedArgument {
+    public static func resolveArgument(_ argument: String?, arg: CommandArgument, on event: _EventType) throws -> [Element.ResolvedArgument] {
+        guard let args = argument?.split(separator: " ").map(String.init), !args.isEmpty else { throw CommandError.ArgumentNotFound(arg.componentName) }
+        return try args.reduce(into: [], { $0.append(try Element.resolveArgument($1, on: event)) })
+    }
+    
+    public static func resolveArgument(_ argument: String, on event: _EventType) throws -> ResolvedArgument {
         let args = argument.split(separator: " ").map(String.init)
         return try args.reduce(into: [], { $0.append(try Element.resolveArgument($1, on: event)) })
     }
@@ -223,12 +235,12 @@ extension Optional: CommandArgumentConvertible where Wrapped: CommandArgumentCon
         Wrapped.typedName
     }
     public typealias ResolvedArgument = Wrapped.ResolvedArgument?
-    public static func resolveArgument(_ argument: String, on event: CommandEvent) throws -> Wrapped.ResolvedArgument? {
+    public static func resolveArgument(_ argument: String, on event: _EventType) throws -> Wrapped.ResolvedArgument? {
         guard !argument.isEmpty else { return nil }
         return try? Wrapped.resolveArgument(argument, on: event)
     }
     
-    public static func resolveArgument(_ argument: String?, arg: CommandArgument, on event: CommandEvent) throws -> ResolvedArgument {
+    public static func resolveArgument(_ argument: String?, arg: CommandArgument, on event: _EventType) throws -> ResolvedArgument {
         if let arg = argument {
             return try self.resolveArgument(arg, on: event)
         } else {

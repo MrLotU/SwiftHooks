@@ -22,33 +22,41 @@ extension SwiftHooks {
         foundCommands.forEach { (command) in
             guard command.hookWhitelist.isEmpty || command.hookWhitelist.contains(h.id) else { return }
             let event = CommandEvent(hooks: self, cmd: command, msg: message, prefix: prefix, for: h, on: eventLoop)
-            guard command.permissionChecks.map({ check in
+            EventLoopFuture<Bool>.whenAllSucceed(command.permissionChecks.map({ check in
                 check.check(message.gAuthor, canUse: command, on: event)
-            }).allSatisfy({ bool in bool }) else {
-                return event.message.error(CommandError.InvalidPermissions, on: command)
+            }), on: eventLoop)
+            .flatMapErrorThrowing { e in
+                event.logger.error("\(e)")
+                return [false]
             }
-            
-            event.logger.debug("Invoking command")
-            event.logger.trace("Full message: \(message.content)")
-            let timer = Timer(label: "command_duration", dimensions: [("command", command.fullTrigger)])
-            let start = DispatchTime.now().uptimeNanoseconds
-            command.invoke(on: event)
-                .flatMapErrorThrowing({ (e) in
-                    event.message.error(e, on: command)
-                    throw e
-                })
-                .whenComplete { result in
-                    let delta = DispatchTime.now().uptimeNanoseconds - start
-                    timer.recordNanoseconds(delta)
-                    switch result {
-                    case .success(_):
-                        event.logger.debug("Command succesfully invoked.")
-                        Counter(label: "command_finish", dimensions: [("command", command.fullTrigger), ("status", "success")]).increment()
-                    case .failure(let e):
-                        event.logger.error("\(e.localizedDescription)")
-                        Counter(label: "command_finish", dimensions: [("command", command.fullTrigger), ("status", "failure")]).increment()
-                    }
+            .map { cs -> Void in
+                guard cs.allSatisfy({ bool in bool }) else {
+                    return event.message.error(CommandError.InvalidPermissions, on: command)
+                }
+                
+                event.logger.debug("Invoking command")
+                event.logger.trace("Full message: \(message.content)")
+                let timer = Timer(label: "command_duration", dimensions: [("command", command.fullTrigger)])
+                let start = DispatchTime.now().uptimeNanoseconds
+                command.invoke(on: event)
+                    .flatMapErrorThrowing({ (e) in
+                        event.message.error(e, on: command)
+                        throw e
+                    })
+                    .whenComplete { result in
+                        let delta = DispatchTime.now().uptimeNanoseconds - start
+                        timer.recordNanoseconds(delta)
+                        switch result {
+                        case .success(_):
+                            event.logger.debug("Command succesfully invoked.")
+                            Counter(label: "command_finish", dimensions: [("command", command.fullTrigger), ("status", "success")]).increment()
+                        case .failure(let e):
+                            event.logger.error("\(e.localizedDescription)")
+                            Counter(label: "command_finish", dimensions: [("command", command.fullTrigger), ("status", "failure")]).increment()
+                        }
+                }
             }
+            .whenComplete { _ in }
         }
     }
     

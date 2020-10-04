@@ -1,5 +1,6 @@
 import class NIO.EventLoopFuture
 import protocol NIO.EventLoop
+import Logging
 
 /// Base `ExecutableCommand`
 public protocol _ExecutableCommand: Commands {
@@ -11,6 +12,8 @@ public protocol _ExecutableCommand: Commands {
     var group: String? { get }
     /// List of aliases. Secondary triggers for command.
     var alias: [String] { get }
+    /// Plugin this command was registered from
+    var plugin: String! { get }
     /// Hook whitelist. Commands will only get executed if message is sent from hooks in this list.
     ///
     /// Leave empty to whitelist all hooks.
@@ -26,11 +29,15 @@ public protocol _ExecutableCommand: Commands {
     func validate() throws
     /// Invokes a command on given event.
     func invoke(on event: CommandEvent) -> EventLoopFuture<Void>
+    /// Sets the plugin value. Only used internally.
+    func setPlugin(_ p: String) -> Self
 }
 
 public protocol _EventType {
     static func from(_ event: CommandEvent) -> Self
     var eventLoop: EventLoop { get }
+    var hooks: SwiftHooks { get }
+    var logger: Logger { get }
 }
 
 extension CommandEvent: _EventType {
@@ -49,7 +56,7 @@ public protocol ExecutableCommand: _ExecutableCommand {
     associatedtype EventType: _EventType
 
     /// Used for FunctionBuilder Copy On Write.
-    func copyWith(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: Execute) -> Self
+    func copyWith(name: String, group: String?, alias: [String], plugin: String?, hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: Execute) -> Self
     
     func changeEventType<N>(_ to: N.Type) -> Self where Self.EventType == N
 }
@@ -81,7 +88,7 @@ public extension ExecutableCommand {
     /// - parameters:
     ///     - hook: HookID to whitelist.
     func onHook(_ hook: HookID) -> Self {
-        return self.copyWith(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist + hook, permissionChecks: permissionChecks, closure: closure)
+        return self.copyWith(name: name, group: group, alias: alias, plugin: plugin, hookWhitelist: hookWhitelist + hook, permissionChecks: permissionChecks, closure: closure)
     }
     
     /// Adds an alias to this command.
@@ -91,7 +98,7 @@ public extension ExecutableCommand {
     /// - parameters:
     ///     - string: Alias to add.
     func alias(_ string: String) -> Self {
-        return self.copyWith(name: name, group: group, alias: alias + string, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure)
+        return self.copyWith(name: name, group: group, alias: alias + string, plugin: plugin, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure)
     }
     
     /// Adds a check to this command.
@@ -101,7 +108,7 @@ public extension ExecutableCommand {
     /// - parameters:
     ///     - c: Check to add.
     func check(_ c: CommandPermissionChecker) -> Self {
-        return self.copyWith(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks + c, closure: closure)
+        return self.copyWith(name: name, group: group, alias: alias, plugin: plugin, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks + c, closure: closure)
     }
     
     /// Sets the group of this command.
@@ -111,7 +118,7 @@ public extension ExecutableCommand {
     /// - parameters:
     ///     - group: Group to add.
     func group(_ group: String) -> Self {
-        return self.copyWith(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure)
+        return self.copyWith(name: name, group: group, alias: alias, plugin: plugin, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure)
     }
     
     /// Sets the closure of this command.
@@ -121,12 +128,12 @@ public extension ExecutableCommand {
     /// - parameters:
     ///      - c: Closure to execute
     func execute(_ c: Execute) -> Self {
-        return self.copyWith(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: c)
+        return self.copyWith(name: name, group: group, alias: alias, plugin: plugin, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: c)
     }
 
     func executables() -> [_ExecutableCommand] {
         return alias.reduce(into: [self]) {
-            $0.append(self.copyWith(name: $1, group: group, alias: [], hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure))
+            $0.append(self.copyWith(name: $1, group: group, alias: [], plugin: plugin, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure))
         }
     }
 }

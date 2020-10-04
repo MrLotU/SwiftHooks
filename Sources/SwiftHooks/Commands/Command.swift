@@ -16,6 +16,7 @@ public struct Command<EventType>: ExecutableCommand where EventType: _EventType 
     public let name: String
     public let group: String?
     public let alias: [String]
+    public let plugin: String!
     public let hookWhitelist: [HookID]
     public let permissionChecks: [CommandPermissionChecker]
     public let closure: (EventType) -> AnyFuture
@@ -24,18 +25,23 @@ public struct Command<EventType>: ExecutableCommand where EventType: _EventType 
         return closure(EventType.from(event)).toVoidFuture()
     }
     
-    public func copyWith(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) -> Self {
-        return .init(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure)
+    public func setPlugin(_ p: String) -> Self {
+        return .init(name: name, group: group, alias: alias, plugin: p, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure)
+    }
+    
+    public func copyWith(name: String, group: String?, alias: [String], plugin: String?, hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) -> Self {
+        return .init(name: name, group: group, alias: alias, plugin: plugin, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure)
     }
     
     public func changeEventType<N>(_ to: N.Type) -> Command<N> {
-        return .init(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: { e in e.eventLoop.makeSucceededFuture(()) })
+        return .init(name: name, group: group, alias: alias, plugin: plugin, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: { e in e.eventLoop.makeSucceededFuture(()) })
     }
     
-    internal init(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) {
+    internal init(name: String, group: String?, alias: [String], plugin: String?, hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) {
         self.name = name
         self.group = group
         self.alias = alias
+        self.plugin = plugin
         self.hookWhitelist = hookWhitelist
         self.permissionChecks = permissionChecks
         self.closure = closure
@@ -49,6 +55,7 @@ public struct Command<EventType>: ExecutableCommand where EventType: _EventType 
         self.name = name
         self.group = nil
         self.alias = []
+        self.plugin = nil
         self.hookWhitelist = []
         self.permissionChecks = []
         self.closure = { e in e.eventLoop.makeSucceededFuture(()) }
@@ -70,6 +77,7 @@ public struct Command<EventType>: ExecutableCommand where EventType: _EventType 
             name: self.name,
             group: group,
             alias: alias,
+            plugin: plugin,
             hookWhitelist: hookWhitelist,
             permissionChecks: permissionChecks,
             closure: { e, _ in e.eventLoop.makeSucceededFuture(()) },
@@ -101,6 +109,7 @@ public struct OneArgCommand<A, EventType>: ExecutableCommand where A: CommandArg
     public let name: String
     public let group: String?
     public let alias: [String]
+    public let plugin: String!
     public let hookWhitelist: [HookID]
     public let permissionChecks: [CommandPermissionChecker]
     public let closure: (EventType, A.ResolvedArgument) -> AnyFuture
@@ -110,18 +119,23 @@ public struct OneArgCommand<A, EventType>: ExecutableCommand where A: CommandArg
     
     let arg: CommandArgument
     
-    public func copyWith(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) -> Self {
-        return .init(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure, arg: arg)
+    public func setPlugin(_ p: String) -> Self {
+        return .init(name: name, group: group, alias: alias, plugin: p, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: { e, _ in e.eventLoop.makeSucceededFuture(()) }, arg: arg)
+    }
+    
+    public func copyWith(name: String, group: String?, alias: [String], plugin: String?, hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) -> Self {
+        return .init(name: name, group: group, alias: alias, plugin: plugin, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure, arg: arg)
     }
     
     public func changeEventType<N>(_ to: N.Type) -> OneArgCommand<A, N> {
-        return .init(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: { e, _ in e.eventLoop.makeSucceededFuture(()) }, arg: arg)
+        return .init(name: name, group: group, alias: alias, plugin: plugin, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: { e, _ in e.eventLoop.makeSucceededFuture(()) }, arg: arg)
     }
     
-    internal init(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute, arg: CommandArgument) {
+    internal init(name: String, group: String?, alias: [String], plugin: String?, hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute, arg: CommandArgument) {
         self.name = name
         self.group = group
         self.alias = alias
+        self.plugin = plugin
         self.hookWhitelist = hookWhitelist
         self.permissionChecks = permissionChecks
         self.closure = closure
@@ -155,6 +169,7 @@ public struct OneArgCommand<A, EventType>: ExecutableCommand where A: CommandArg
             name: self.name,
             group: group,
             alias: alias,
+            plugin: plugin,
             hookWhitelist: hookWhitelist,
             permissionChecks: permissionChecks,
             closure: { e, _, _ in e.eventLoop.makeSucceededFuture(()) },
@@ -169,6 +184,7 @@ public struct TwoArgCommand<A, B, EventType>: ExecutableCommand where A: Command
     public let name: String
     public let group: String?
     public let alias: [String]
+    public let plugin: String!
     public let hookWhitelist: [HookID]
     public let permissionChecks: [CommandPermissionChecker]
     public let closure: (EventType, A.ResolvedArgument, B.ResolvedArgument) -> AnyFuture
@@ -176,18 +192,23 @@ public struct TwoArgCommand<A, B, EventType>: ExecutableCommand where A: Command
         [argOne, argTwo].map(\.description).joined(separator: " ")
     }
     
-    public func copyWith(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) -> Self {
-        return .init(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure, argOne: argOne, argTwo: argTwo)
+    public func setPlugin(_ p: String) -> TwoArgCommand<A, B, EventType> {
+        return .init(name: name, group: group, alias: alias, plugin: p, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: { e, _, _ in e.eventLoop.makeSucceededFuture(()) }, argOne: argOne, argTwo: argTwo)
+    }
+    
+    public func copyWith(name: String, group: String?, alias: [String], plugin: String?, hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) -> Self {
+        return .init(name: name, group: group, alias: alias, plugin: plugin, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure, argOne: argOne, argTwo: argTwo)
     }
     
     public func changeEventType<N>(_ to: N.Type) -> TwoArgCommand<A, B, N> {
-        return .init(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: { e, _, _ in e.eventLoop.makeSucceededFuture(()) }, argOne: argOne, argTwo: argTwo)
+        return .init(name: name, group: group, alias: alias, plugin: plugin, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: { e, _, _ in e.eventLoop.makeSucceededFuture(()) }, argOne: argOne, argTwo: argTwo)
     }
     
-    internal init(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute, argOne: CommandArgument, argTwo: CommandArgument) {
+    internal init(name: String, group: String?, alias: [String], plugin: String?, hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute, argOne: CommandArgument, argTwo: CommandArgument) {
         self.name = name
         self.group = group
         self.alias = alias
+        self.plugin = plugin
         self.hookWhitelist = hookWhitelist
         self.permissionChecks = permissionChecks
         self.closure = closure
@@ -230,6 +251,7 @@ public struct TwoArgCommand<A, B, EventType>: ExecutableCommand where A: Command
             name: self.name,
             group: group,
             alias: alias,
+            plugin: plugin,
             hookWhitelist: hookWhitelist,
             permissionChecks: permissionChecks,
             closure: { e, _, _, _ in e.eventLoop.makeSucceededFuture(()) },
@@ -245,6 +267,7 @@ public struct ThreeArgCommand<A, B, C, EventType>: ExecutableCommand where A: Co
     public let name: String
     public let group: String?
     public let alias: [String]
+    public let plugin: String!
     public let hookWhitelist: [HookID]
     public let permissionChecks: [CommandPermissionChecker]
     public let closure: (EventType, A.ResolvedArgument, B.ResolvedArgument, C.ResolvedArgument) -> AnyFuture
@@ -252,18 +275,23 @@ public struct ThreeArgCommand<A, B, C, EventType>: ExecutableCommand where A: Co
         [argOne, argTwo, argThree].map(\.description).joined(separator: " ")
     }
     
-    public func copyWith(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) -> Self {
-        return .init(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure, argOne: argOne, argTwo: argTwo, argThree: argThree)
+    public func setPlugin(_ p: String) -> ThreeArgCommand<A, B, C, EventType> {
+        return .init(name: name, group: group, alias: alias, plugin: p, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: { e, _, _, _ in e.eventLoop.makeSucceededFuture(()) }, argOne: argOne, argTwo: argTwo, argThree: argThree)
+    }
+    
+    public func copyWith(name: String, group: String?, alias: [String], plugin: String?, hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) -> Self {
+        return .init(name: name, group: group, alias: alias, plugin: plugin, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure, argOne: argOne, argTwo: argTwo, argThree: argThree)
     }
     
     public func changeEventType<N>(_ to: N.Type) -> ThreeArgCommand<A, B, C, N> {
-        return .init(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: { e, _, _, _ in e.eventLoop.makeSucceededFuture(()) }, argOne: argOne, argTwo: argTwo, argThree: argThree)
+        return .init(name: name, group: group, alias: alias, plugin: plugin, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: { e, _, _, _ in e.eventLoop.makeSucceededFuture(()) }, argOne: argOne, argTwo: argTwo, argThree: argThree)
     }
     
-    internal init(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute, argOne: CommandArgument, argTwo: CommandArgument, argThree: CommandArgument) {
+    internal init(name: String, group: String?, alias: [String], plugin: String?, hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute, argOne: CommandArgument, argTwo: CommandArgument, argThree: CommandArgument) {
         self.name = name
         self.group = group
         self.alias = alias
+        self.plugin = plugin
         self.hookWhitelist = hookWhitelist
         self.permissionChecks = permissionChecks
         self.closure = closure
@@ -312,6 +340,7 @@ public struct ThreeArgCommand<A, B, C, EventType>: ExecutableCommand where A: Co
             name: self.name,
             group: group,
             alias: alias,
+            plugin: plugin,
             hookWhitelist: hookWhitelist,
             permissionChecks: permissionChecks,
             closure: { e, _ in e.eventLoop.makeSucceededFuture(()) },
@@ -325,6 +354,7 @@ public struct ArrayArgCommand<EventType>: ExecutableCommand where EventType: _Ev
     public let name: String
     public let group: String?
     public let alias: [String]
+    public let plugin: String!
     public let hookWhitelist: [HookID]
     public let permissionChecks: [CommandPermissionChecker]
     public let closure: (EventType, Arguments) throws -> AnyFuture
@@ -335,18 +365,23 @@ public struct ArrayArgCommand<EventType>: ExecutableCommand where EventType: _Ev
         return self.arguments.map(\.description).joined(separator: " ")
     }
     
-    public func copyWith(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) -> ArrayArgCommand {
-        return .init(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure, arguments: arguments)
+    public func setPlugin(_ p: String) -> ArrayArgCommand<EventType> {
+        return .init(name: name, group: group, alias: alias, plugin: p, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: { e, _ in e.eventLoop.makeSucceededFuture(())}, arguments: arguments)
+    }
+    
+    public func copyWith(name: String, group: String?, alias: [String], plugin: String?, hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute) -> ArrayArgCommand {
+        return .init(name: name, group: group, alias: alias, plugin: plugin, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: closure, arguments: arguments)
     }
     
     public func changeEventType<N>(_ to: N.Type) -> ArrayArgCommand<N> {
-        return .init(name: name, group: group, alias: alias, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: { e, _ in e.eventLoop.makeSucceededFuture(())}, arguments: arguments)
+        return .init(name: name, group: group, alias: alias, plugin: plugin, hookWhitelist: hookWhitelist, permissionChecks: permissionChecks, closure: { e, _ in e.eventLoop.makeSucceededFuture(())}, arguments: arguments)
     }
     
-    internal init(name: String, group: String?, alias: [String], hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute, arguments: [CommandArgument]) {
+    internal init(name: String, group: String?, alias: [String], plugin: String?, hookWhitelist: [HookID], permissionChecks: [CommandPermissionChecker], closure: @escaping Execute, arguments: [CommandArgument]) {
         self.name = name
         self.group = group
         self.alias = alias
+        self.plugin = plugin
         self.hookWhitelist = hookWhitelist
         self.permissionChecks = permissionChecks
         self.closure = closure
@@ -384,6 +419,7 @@ public struct ArrayArgCommand<EventType>: ExecutableCommand where EventType: _Ev
             name: self.name,
             group: group,
             alias: alias,
+            plugin: plugin,
             hookWhitelist: hookWhitelist,
             permissionChecks: permissionChecks,
             closure: { e, _ in e.eventLoop.makeSucceededFuture(()) },
